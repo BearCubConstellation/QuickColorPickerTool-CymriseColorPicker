@@ -1,4 +1,4 @@
-<h1 align="center">CymriseColorPicker</h1>
+<h1 align="center">Quick color picker tool - CymriseColorPicker</h1>
 
 <p align="center">
 	<img alt="Static Badge" src="https://img.shields.io/badge/Version-V1.0-blue?style=flat-square">
