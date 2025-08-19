@@ -1,0 +1,22 @@
+# 编译输出
+bin/
+obj/
+
+# IDE配置
+.vscode/
+*.user
+*.suo
+*.vs/
+
+# 依赖项
+packages/
+node_modules/
+
+# 发布输出
+publish/
+Release/
+Debug/
+
+# 系统文件
+Thumbs.db
+.DS_Store
