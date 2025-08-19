@@ -1,3 +1,16 @@
+<h1 align="center">CymriseColorPicker</h1>
+
+<p align="center">
+	<img alt="Static Badge" src="https://img.shields.io/badge/Version-V1.0-blue?style=flat-square">
+</a>
+</p>
+
+-------
+
+<p align="center">
+	<img src="/screenshot.png?cachefix" />
+</p>
+
 # CymriseColorPicker
 屏幕取色工具 - 快速获取屏幕上任意位置的颜色值
 
@@ -15,5 +28,3 @@
 
 ## 编译
 dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
-
-## 截图
