@@ -25,7 +25,7 @@ Features
 - Keyboard shortcuts (ESC to cancel, Space/Enter to confirm)
 
 ## Instructions
-1. Click the "Click to Pick Color" button
+1. Click the "点击取色"(Click to Pick Color) button
 2. Move the mouse to the desired location
 3. Left-click or press Spacebar/Enter to confirm
 4. The color value will be automatically copied to the clipboard
