@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Cymrise
+// Licensed under the MIT License.
+
 namespace CymriseColorPicker
 {
     partial class MainForm
@@ -94,7 +97,7 @@ namespace CymriseColorPicker
             this.txtRgb.Size = new System.Drawing.Size(100, 21);
             this.txtRgb.TabIndex = 5;
 
-            // 作者信息
+            // 作者信�?
             this.author.Location = new System.Drawing.Point(220, 118);
             this.author.Name = "author";
             this.author.Size = new System.Drawing.Size(250, 20);
@@ -119,7 +122,7 @@ namespace CymriseColorPicker
             this.Controls.Add(this.txtRgb);
             this.Controls.Add(this.author);
             this.Name = "MainForm";
-            this.Text = "屏幕取色器";
+            this.Text = "屏幕取色�?;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();

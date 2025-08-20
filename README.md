@@ -14,6 +14,8 @@
 # CymriseColorPicker
 Screen Color Picker - Quickly get the color value of any position on the screen
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**Open Source Statement**: This project is licensed under the [MIT License](LICENSE), which allows free use, modification, and distribution.
 
 ## Download
 - [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
@@ -33,9 +35,15 @@ Screen Color Picker - Quickly get the color value of any position on the screen
 ## Compile
 dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
 
+## Disclaimer
+This software is provided "as is" and the author does not assume any direct or indirect responsibility for it.
+
 ___________________________________________________________________________________________________________________________________________________________
 # CymriseColorPicker
 屏幕取色工具 - 快速获取屏幕上任意位置的颜色值
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**开源声明**：本项目依据 [MIT License](LICENSE) 授权，允许自由使用、修改和分发。
 
 ## 下载
 - [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
@@ -54,3 +62,6 @@ ________________________________________________________________________________
 
 ## 编译
 dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+
+## 免责声明
+本软件按"原样"提供，作者不承担任何直接或间接责任。

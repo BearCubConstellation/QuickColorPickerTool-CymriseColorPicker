@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Cymrise
+// Licensed under the MIT License.
+
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -46,7 +49,7 @@ namespace CymriseColorPicker
 
         private void InitializeCursor()
         {
-            // 预加载十字光标
+            // 预加载十字光�?
             crossCursor = LoadCursor(IntPtr.Zero, IDC_CROSS);
         }
 
@@ -60,10 +63,10 @@ namespace CymriseColorPicker
             if (isPicking) return;
             isPicking = true;
 
-            // 隐藏主窗体
+            // 隐藏主窗�?
             // this.Hide();
         
-            // 初始化颜色预览
+            // 初始化颜色预�?
             lblColor.BackColor = Color.Transparent;
             txtHex.Text = "";
             txtRgb.Text = "";
@@ -83,7 +86,7 @@ namespace CymriseColorPicker
 
         private void CaptureScreenSnapshot()
         {
-            // 获取所有屏幕的总区域
+            // 获取所有屏幕的总区�?
             Rectangle totalBounds = Rectangle.Empty;
             foreach (Screen screen in Screen.AllScreens)
             {
@@ -116,21 +119,21 @@ namespace CymriseColorPicker
             this.TopMost = true;
             this.TopMost = false;
             
-            // 在这里处理获取到的颜色
+            // 在这里处理获取到的颜�?
             lblColor.BackColor = e.SelectedColor;
             txtHex.Text = ColorToHex(e.SelectedColor);
-            // RGB值显示
+            // RGB值显�?
             txtRgb.Text = $"{e.SelectedColor.R}, {e.SelectedColor.G}, {e.SelectedColor.B}";
             
             Clipboard.SetText(txtHex.Text);
-            lblStatus.Text = $"颜色已复制到剪贴板: {txtHex.Text}";
+            lblStatus.Text = $"颜色已复制到剪贴�? {txtHex.Text}";
         }
 
         private void OverlayForm_PickingCancelled(object sender, EventArgs e)
         {
             EndColorPicking();
             // this.Show();
-            lblStatus.Text = "取色已取消";
+            lblStatus.Text = "取色已取�?;
         }
 
         private void EndColorPicking()

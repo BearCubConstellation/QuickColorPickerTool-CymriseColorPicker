@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Cymrise
+// Licensed under the MIT License.
+
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -29,7 +32,7 @@ namespace CymriseColorPicker
 
         private void InitializeForm()
         {
-            // 无边框全屏窗体
+            // 无边框全屏窗�?
             FormBorderStyle = FormBorderStyle.None;
             WindowState = FormWindowState.Maximized;
             TopMost = true;
@@ -39,7 +42,7 @@ namespace CymriseColorPicker
             // 透明背景设置
             BackColor = Color.Magenta;
             TransparencyKey = Color.Magenta;
-            Opacity = 0.01; // 几乎透明但仍能捕获事件
+            Opacity = 0.01; // 几乎透明但仍能捕获事�?
 
             // 设置十字光标
             Cursor = Cursors.Cross;
@@ -74,7 +77,7 @@ namespace CymriseColorPicker
             lastMousePos = e.Location;
             this.Text = $"X: {e.X} Y: {e.Y}";
             
-            // 获取当前颜色并触发预览事件
+            // 获取当前颜色并触发预览事�?
             Color currentColor = GetColorFromSnapshot(e.Location);
             ColorPreview?.Invoke(this, new ColorPreviewEventArgs(currentColor));
         }
@@ -96,7 +99,7 @@ namespace CymriseColorPicker
         {
             if (e.Button == MouseButtons.Left)
             {
-                // 从快照获取颜色
+                // 从快照获取颜�?
                 Color color = GetColorFromSnapshot(e.Location);
                 ColorPicked?.Invoke(this, new ColorEventArgs(color));
                 this.Close();
@@ -126,7 +129,7 @@ namespace CymriseColorPicker
             }
             else if (e.KeyCode == Keys.Space || e.KeyCode == Keys.Enter)
             {
-                // 空格键或回车键也可取色
+                // 空格键或回车键也可取�?
                 Color color = GetColorFromSnapshot(lastMousePos);
                 ColorPicked?.Invoke(this, new ColorEventArgs(color));
                 this.Close();
@@ -137,7 +140,7 @@ namespace CymriseColorPicker
         {
             base.OnShown(e);
             
-            // 将光标限制在屏幕范围内
+            // 将光标限制在屏幕范围�?
             Rectangle bounds = ScreenBounds;
             ClipCursor(ref bounds);
         }

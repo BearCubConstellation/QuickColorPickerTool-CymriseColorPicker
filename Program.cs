@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Cymrise
+// Licensed under the MIT License.
+
 using System;
 using System.Windows.Forms;
 
