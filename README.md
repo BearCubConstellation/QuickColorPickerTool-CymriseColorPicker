@@ -18,7 +18,7 @@ Screen Color Picker - Quickly get the color value of any position on the screen
 ## Download
 - [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
 
-Features
+## Features
 - Real-time color preview
 - HEX/RGB format display
 - One-click copy to clipboard
