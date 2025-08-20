@@ -15,7 +15,7 @@
 屏幕取色工具 - 快速获取屏幕上任意位置的颜色值
 
 ## 下载
-- [](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
+- [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
 
 ## 功能
 - 实时颜色预览
