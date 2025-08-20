@@ -12,6 +12,29 @@
 </p>
 
 # CymriseColorPicker
+Screen Color Picker - Quickly get the color value of any position on the screen
+
+
+## Download
+- [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
+
+Features
+- Real-time color preview
+- HEX/RGB format display
+- One-click copy to clipboard
+- Keyboard shortcuts (ESC to cancel, Space/Enter to confirm)
+
+## Instructions
+1. Click the "Click to Pick Color" button
+2. Move the mouse to the desired location
+3. Left-click or press Spacebar/Enter to confirm
+4. The color value will be automatically copied to the clipboard
+
+## Compile
+dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+
+___________________________________________________________________________________________________________________________________________________________
+# CymriseColorPicker
 屏幕取色工具 - 快速获取屏幕上任意位置的颜色值
 
 ## 下载
