@@ -2,8 +2,6 @@
 
 <p align="center">
 	<img alt="Version" src="https://img.shields.io/badge/Version-V1.0-blue?style=flat-square"> <span></span> <img alt="License" src="https://img.shields.io/badge/License-MIT-%23DAB226?style=flat-square&link=https%3A%2F%2Fopensource.org%2Flicenses%2FMIT"> 
-	
-	[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 </p>
 
 -------
@@ -16,7 +14,7 @@
 Screen Color Picker - Quickly get the color value of any position on the screen
 
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)**Open Source Statement**: This project is licensed under the [MIT License](LICENSE), which allows free use, modification, and distribution.
+**Open Source Statement**: This project is licensed under the [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[MIT License](LICENSE), which allows free use, modification, and distribution.
 
 ## Download
 - [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
@@ -43,8 +41,7 @@ ________________________________________________________________________________
 # CymriseColorPicker
 屏幕取色工具 - 快速获取屏幕上任意位置的颜色值
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-**开源声明**：本项目依据 [MIT License](LICENSE) 授权，允许自由使用、修改和分发。
+**开源声明**：本项目依据 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[MIT License](LICENSE) 授权，允许自由使用、修改和分发。
 
 ## 下载
 - [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
