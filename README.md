@@ -1,8 +1,9 @@
 <h1 align="center">Quick color picker tool - CymriseColorPicker</h1>
 
 <p align="center">
-	<img alt="Static Badge" src="https://img.shields.io/badge/Version-V1.0-blue?style=flat-square">
-</a>
+	<img alt="Version" src="https://img.shields.io/badge/Version-V1.0-blue?style=flat-square"> <span></span> <img alt="License" src="https://img.shields.io/badge/License-MIT-%23DAB226?style=flat-square&link=https%3A%2F%2Fopensource.org%2Flicenses%2FMIT"> 
+	
+	[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 </p>
 
 -------
@@ -14,8 +15,8 @@
 # CymriseColorPicker
 Screen Color Picker - Quickly get the color value of any position on the screen
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-**Open Source Statement**: This project is licensed under the [MIT License](LICENSE), which allows free use, modification, and distribution.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)**Open Source Statement**: This project is licensed under the [MIT License](LICENSE), which allows free use, modification, and distribution.
 
 ## Download
 - [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
