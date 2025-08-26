@@ -17,7 +17,7 @@ Screen Color Picker - Quickly get the color value of any position on the screen
 **Open Source Statement**: This project is licensed under the [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[MIT License](LICENSE), which allows free use, modification, and distribution.
 
 ## Download
-- [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
+- [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/tag/ColorPicker)
 
 ## Features
 - Real-time color preview
@@ -44,7 +44,7 @@ ________________________________________________________________________________
 **开源声明**：本项目依据 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[MIT License](LICENSE) 授权，允许自由使用、修改和分发。
 
 ## 下载
-- [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/download/ColorPicker/CymriseColorPicker.zip)
+- [ColorPicker - V1.0](https://github.com/BearCubConstellation/QuickColorPickerTool-CymriseColorPicker/releases/tag/ColorPicker)
 
 ## 功能
 - 实时颜色预览
