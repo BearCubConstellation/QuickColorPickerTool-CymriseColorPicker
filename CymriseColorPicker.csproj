@@ -7,5 +7,15 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>CymriseColorPicker.ico</ApplicationIcon>
+    <AssemblyName>ColorPicker</AssemblyName>
+
+    <AssemblyTitle>Cymrise Color Picker</AssemblyTitle>
+    <Company>Cymrise</Company>
+    <Product>Cymrise Color Picker</Product>
+    <Copyright>Copyright © 2025 Cymrise</Copyright>
+    <Description>Professional screen color picker tool</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="CymriseColorPicker.ico" />
+  </ItemGroup>
 </Project>

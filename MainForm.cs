@@ -49,7 +49,6 @@ namespace CymriseColorPicker
 
         private void InitializeCursor()
         {
-            // 预加载十字光�?
             crossCursor = LoadCursor(IntPtr.Zero, IDC_CROSS);
         }
 
@@ -63,10 +62,10 @@ namespace CymriseColorPicker
             if (isPicking) return;
             isPicking = true;
 
-            // 隐藏主窗�?
+            // 隐藏主窗
             // this.Hide();
-        
-            // 初始化颜色预�?
+
+            // 初始化颜色预览
             lblColor.BackColor = Color.Transparent;
             txtHex.Text = "";
             txtRgb.Text = "";
@@ -86,7 +85,6 @@ namespace CymriseColorPicker
 
         private void CaptureScreenSnapshot()
         {
-            // 获取所有屏幕的总区�?
             Rectangle totalBounds = Rectangle.Empty;
             foreach (Screen screen in Screen.AllScreens)
             {
@@ -113,48 +111,48 @@ namespace CymriseColorPicker
         private void OverlayForm_ColorPicked(object sender, ColorEventArgs e)
         {
             EndColorPicking();
-            
+
             // 显示主窗体并更新颜色
             this.Show();
             this.TopMost = true;
             this.TopMost = false;
-            
-            // 在这里处理获取到的颜�?
+
+            // 在这里处理获取到的颜色?
             lblColor.BackColor = e.SelectedColor;
             txtHex.Text = ColorToHex(e.SelectedColor);
-            // RGB值显�?
+            // RGB值?
             txtRgb.Text = $"{e.SelectedColor.R}, {e.SelectedColor.G}, {e.SelectedColor.B}";
-            
+
             Clipboard.SetText(txtHex.Text);
-            lblStatus.Text = $"颜色已复制到剪贴�? {txtHex.Text}";
+            lblStatus.Text = $"颜色已复制到剪贴板 {txtHex.Text}";
         }
 
         private void OverlayForm_PickingCancelled(object sender, EventArgs e)
         {
             EndColorPicking();
             // this.Show();
-            lblStatus.Text = "取色已取�?;
+            lblStatus.Text = "已吸取颜色";
         }
 
         private void EndColorPicking()
         {
             if (!isPicking) return;
-            
+
             isPicking = false;
-            
+
             // 取消预览事件订阅
             if (overlayForm != null)
             {
                 overlayForm.ColorPreview -= OverlayForm_ColorPreview;
             }
-            
+
             // 清理资源
             overlayForm?.Dispose();
             overlayForm = null;
-            
+
             screenSnapshot?.Dispose();
             screenSnapshot = null;
-            
+
             // 释放光标限制
             ClipCursor(IntPtr.Zero);
         }

@@ -1,12 +1,16 @@
 // Copyright (c) 2025 Cymrise
 // Licensed under the MIT License.
 
+using System.Drawing;
+using System.Reflection;
+using System.Windows.Forms;
+
 namespace CymriseColorPicker
 {
     partial class MainForm
     {
         private System.ComponentModel.IContainer components = null;
-        
+
         // 声明控件
         protected internal System.Windows.Forms.Button btnPick;
         protected internal System.Windows.Forms.Label lblColor;
@@ -35,10 +39,14 @@ namespace CymriseColorPicker
             this.lblStatus = new System.Windows.Forms.Label();
             this.lblTitle = new System.Windows.Forms.Label();
             this.author = new System.Windows.Forms.Label();
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CymriseColorPicker.CymriseColorPicker.ico"))
+            {
+                if (stream != null) this.Icon = new Icon(stream);
+            }
             this.SuspendLayout();
-            // 
+            //
             // btnPick
-            // 
+            //
             this.btnPick.Location = new System.Drawing.Point(20, 80);
             this.btnPick.Name = "btnPick";
             this.btnPick.Size = new System.Drawing.Size(100, 30);
@@ -46,33 +54,33 @@ namespace CymriseColorPicker
             this.btnPick.Text = "点击取色";
             this.btnPick.UseVisualStyleBackColor = true;
             this.btnPick.Click += new System.EventHandler(this.btnPick_Click);
-            // 
+            //
             // lblColor
-            // 
+            //
             this.lblColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lblColor.Location = new System.Drawing.Point(20, 20);
             this.lblColor.Name = "lblColor";
             this.lblColor.Size = new System.Drawing.Size(100, 50);
             this.lblColor.TabIndex = 1;
-            // 
+            //
             // txtHex
-            // 
+            //
             this.txtHex.Location = new System.Drawing.Point(170, 12);
             this.txtHex.Name = "txtHex";
             this.txtHex.ReadOnly = true;
             this.txtHex.Size = new System.Drawing.Size(100, 21);
             this.txtHex.TabIndex = 2;
-            // 
+            //
             // lblStatus
-            // 
+            //
             this.lblStatus.Location = new System.Drawing.Point(20, 120);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(205, 20);
             this.lblStatus.TabIndex = 3;
             this.lblStatus.Text = "就绪";
-            // 
+            //
             // lblTitle
-            // 
+            //
             this.lblTitle.AutoSize = true;
             this.lblTitle.Location = new System.Drawing.Point(130, 15);
             this.lblTitle.Name = "lblTitle";
@@ -88,7 +96,7 @@ namespace CymriseColorPicker
             this.lblRgb.Name = "lblRgb";
             this.lblRgb.Size = new System.Drawing.Size(35, 12);
             this.lblRgb.Text = "RGB:";
-            
+
             // RGB值文本框
             this.txtRgb = new System.Windows.Forms.TextBox();
             this.txtRgb.Location = new System.Drawing.Point(175, 55);
@@ -97,21 +105,26 @@ namespace CymriseColorPicker
             this.txtRgb.Size = new System.Drawing.Size(100, 21);
             this.txtRgb.TabIndex = 5;
 
-            // 作者信�?
             this.author.Location = new System.Drawing.Point(220, 118);
             this.author.Name = "author";
             this.author.Size = new System.Drawing.Size(250, 20);
             this.author.TabIndex = 6;
             this.author.Text = "By Cymrise";
+            this.author.ForeColor = System.Drawing.Color.LightGray;
+
+            author.Click += (s, e) =>
+                MessageBox.Show("作者: Cymrise\n网站: https://cymrise.cn", "关于");
+            // author.Click += (s, e) =>
+            //     MessageBox.Show("Author: Cymrise\nSite: https://cymrise.cn", "About");
 
             // 禁止更改大小
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = true;
 
-            // 
+            //
             // MainForm
-            // 
+            //
             this.ClientSize = new System.Drawing.Size(300, 140);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.lblStatus);
@@ -122,7 +135,7 @@ namespace CymriseColorPicker
             this.Controls.Add(this.txtRgb);
             this.Controls.Add(this.author);
             this.Name = "MainForm";
-            this.Text = "屏幕取色�?;
+            this.Text = "屏幕取色";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
