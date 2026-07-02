@@ -50,6 +50,20 @@ build\Release\ColorPicker.exe
 build\Release\ColorPicker-en.exe
 ```
 
+## Release process
+
+`CHANGELOG.md` is the single source of truth for version history. To publish a release:
+
+1. Update `VERSION`, file metadata, and `CHANGELOG.md`.
+2. Commit and push the release commit to `main`.
+3. Create and push a matching tag, for example `v1.3.2`.
+4. The release workflow validates that the tag matches `VERSION`, builds both language editions, packages them, and creates the GitHub Release.
+
+```powershell
+git tag v1.3.2
+git push origin v1.3.2
+```
+
 ---
 
 # ColorPicker
@@ -102,4 +116,18 @@ cmake --build build --config Release --target ColorPicker ColorPickerEn
 ```text
 build\Release\ColorPicker.exe
 build\Release\ColorPicker-en.exe
+```
+
+## 发版流程
+
+`CHANGELOG.md` 是唯一的版本历史来源。发布新版本时：
+
+1. 更新 `VERSION`、文件元数据与 `CHANGELOG.md`。
+2. 将发版提交推送到 `main`。
+3. 创建并推送对应版本标签，例如 `v1.3.2`。
+4. Release 工作流会校验标签与 `VERSION` 一致，然后构建中英文版本、打包并创建 GitHub Release。
+
+```powershell
+git tag v1.3.2
+git push origin v1.3.2
 ```
