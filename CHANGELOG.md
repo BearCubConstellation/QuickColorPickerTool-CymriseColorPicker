@@ -1,25 +1,24 @@
 # Changelog
 
-## v1.2.2
+## v1.3.0
+
+### Added
+
+- Added an English executable, `ColorPicker-en.exe`, built from the same native source as the Chinese edition.
+- Release packages now include separate `zh-CN` and `en-US` Windows x64 archives.
+- Added a bilingual README with a latest-release download link.
+
+### Improved
+
+- Further reduced header height, bottom spacing, control heights, and default window size for a true small-tool layout.
+- The header title starts white and changes to the confirmed picked color.
+- Cleaned obsolete duplicate source and superseded release-note files from the active repository tree.
 
 ### Fixed
 
-- 重构主界面为按 DPI 与客户区尺寸计算的布局，修复标题、颜色信息、按钮、提示语、状态语与底部版本信息的裁剪和重叠。
-- 扩大默认窗口与内容间距，避免高 DPI 或系统字体缩放时界面拥挤。
-- 移除启动取色时同步复制完整虚拟桌面，解决点击“开始取色”后的明显卡顿。
-- 改为按当前鼠标物理坐标直接读取单像素，保留多屏、负坐标和非 100% 缩放支持。
+- Preserved frozen-desktop picking, full-screen click capture, and real-time preview-lens tracking.
 
-## v1.2.1
+## v1.2.x
 
-### Changed
-
-- 从 WinForms / .NET 发布链迁移为原生 Win32 C++。
-- 发布包改为单个原生 `ColorPicker.exe`，不包含 .NET Runtime、PDB 或 `.config`。
-- 使用静态 C/C++ 运行库，用户无需安装额外应用运行时。
-
-### Fixed
-
-- 进程启用 Per-Monitor V2 DPI 感知。
-- 以完整虚拟桌面物理像素坐标采样，覆盖非 100% 缩放、多显示器和负坐标布局。
-- 键盘确认与鼠标确认使用同一屏幕坐标。
-- 移除鼠标裁剪逻辑，取消取色不会锁定鼠标。
+- Migrated from WinForms/.NET to native Win32 C++ with a static C++ runtime.
+- Added Per-Monitor V2 DPI support, multi-monitor / negative-coordinate support, frozen desktop picking, and the project GitHub entry.
