@@ -1,9 +1,13 @@
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0A00
+#endif
+
 #include <windows.h>
 #include <windowsx.h>
 #include <dwmapi.h>
 
 #include <algorithm>
-#include <cwchar>
+#include <cstring>
 #include <string>
 
 namespace
@@ -18,19 +22,35 @@ constexpr COLORREF kCanvas = RGB(248, 250, 252);
 constexpr COLORREF kMuted = RGB(100, 116, 139);
 constexpr COLORREF kBlue = RGB(37, 99, 235);
 constexpr COLORREF kBlueSoft = RGB(239, 246, 255);
+constexpr COLORREF kGreen = RGB(5, 150, 105);
 
 HINSTANCE gInstance = nullptr;
 HWND gMainWindow = nullptr;
 HWND gOverlayWindow = nullptr;
 HWND gLensWindow = nullptr;
-HDC gSnapshotDc = nullptr;
-HBITMAP gSnapshotBitmap = nullptr;
-HBITMAP gSnapshotPrevious = nullptr;
+HDC gDesktopDc = nullptr;
 RECT gVirtualBounds{};
 POINT gLastCursor{};
-COLORREF gSelectedColor = RGB(59, 130, 246);
+COLORREF gSelectedColor = RGB(52, 52, 52);
 bool gPicking = false;
 std::wstring gStatus = L"就绪，可开始取色";
+
+struct UiLayout
+{
+    RECT header{};
+    RECT card{};
+    RECT swatch{};
+    RECT hexCaption{};
+    RECT hexValue{};
+    RECT rgbCaption{};
+    RECT rgbValue{};
+    RECT copyHex{};
+    RECT copyRgb{};
+    RECT pickButton{};
+    RECT hint{};
+    RECT status{};
+    RECT footer{};
+};
 
 int Px(HWND window, int dip)
 {
@@ -101,6 +121,45 @@ void FillRoundRect(HDC dc, const RECT& rect, COLORREF fill, COLORREF border, int
     DeleteObject(pen);
 }
 
+UiLayout CalculateLayout(HWND window)
+{
+    RECT client{};
+    GetClientRect(window, &client);
+
+    const int margin = Px(window, 20);
+    const int cardWidth = std::max(Px(window, 340), client.right - margin * 2);
+    const int headerHeight = Px(window, 90);
+    const int cardTop = headerHeight + Px(window, 20);
+    const int cardHeight = Px(window, 144);
+    const int inside = Px(window, 16);
+    const int copyWidth = Px(window, 72);
+    const int copyHeight = Px(window, 30);
+    const int swatchSize = Px(window, 100);
+
+    UiLayout layout{};
+    layout.header = MakeRect(0, 0, client.right, headerHeight);
+    layout.card = MakeRect(margin, cardTop, cardWidth, cardHeight);
+    layout.swatch = MakeRect(layout.card.left + inside, layout.card.top + Px(window, 22), swatchSize, swatchSize);
+
+    const int contentLeft = layout.swatch.right + Px(window, 18);
+    const int copyLeft = layout.card.right - inside - copyWidth;
+    const int valueWidth = std::max(Px(window, 100), copyLeft - Px(window, 10) - contentLeft);
+
+    layout.hexCaption = MakeRect(contentLeft, layout.card.top + Px(window, 20), valueWidth, Px(window, 16));
+    layout.hexValue = MakeRect(contentLeft, layout.card.top + Px(window, 38), valueWidth, Px(window, 30));
+    layout.copyHex = MakeRect(copyLeft, layout.card.top + Px(window, 37), copyWidth, copyHeight);
+
+    layout.rgbCaption = MakeRect(contentLeft, layout.card.top + Px(window, 80), valueWidth, Px(window, 16));
+    layout.rgbValue = MakeRect(contentLeft, layout.card.top + Px(window, 98), valueWidth, Px(window, 26));
+    layout.copyRgb = MakeRect(copyLeft, layout.card.top + Px(window, 96), copyWidth, copyHeight);
+
+    layout.pickButton = MakeRect(margin, layout.card.bottom + Px(window, 22), cardWidth, Px(window, 50));
+    layout.hint = MakeRect(margin, layout.pickButton.bottom + Px(window, 16), cardWidth, Px(window, 20));
+    layout.status = MakeRect(margin, layout.hint.bottom + Px(window, 8), cardWidth, Px(window, 22));
+    layout.footer = MakeRect(margin, layout.status.bottom + Px(window, 7), cardWidth, Px(window, 18));
+    return layout;
+}
+
 bool CopyText(const std::wstring& text)
 {
     for (int attempt = 0; attempt < 3; ++attempt)
@@ -115,7 +174,7 @@ bool CopyText(const std::wstring& text)
                 void* target = GlobalLock(memory);
                 if (target != nullptr)
                 {
-                    memcpy(target, text.c_str(), bytes);
+                    std::memcpy(target, text.c_str(), bytes);
                     GlobalUnlock(memory);
                     if (SetClipboardData(CF_UNICODETEXT, memory) != nullptr)
                     {
@@ -127,7 +186,7 @@ bool CopyText(const std::wstring& text)
             }
             CloseClipboard();
         }
-        Sleep(30);
+        Sleep(25);
     }
     return false;
 }
@@ -141,73 +200,21 @@ void SetStatus(const std::wstring& text)
     }
 }
 
-void ReleaseSnapshot()
+void ReleaseDesktopDc()
 {
-    if (gSnapshotDc != nullptr)
+    if (gDesktopDc != nullptr)
     {
-        if (gSnapshotPrevious != nullptr)
-        {
-            SelectObject(gSnapshotDc, gSnapshotPrevious);
-        }
-        if (gSnapshotBitmap != nullptr)
-        {
-            DeleteObject(gSnapshotBitmap);
-        }
-        DeleteDC(gSnapshotDc);
+        ReleaseDC(nullptr, gDesktopDc);
+        gDesktopDc = nullptr;
     }
-
-    gSnapshotDc = nullptr;
-    gSnapshotBitmap = nullptr;
-    gSnapshotPrevious = nullptr;
 }
 
-bool CaptureVirtualScreen()
+void RefreshVirtualBounds()
 {
-    ReleaseSnapshot();
-
     gVirtualBounds.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
     gVirtualBounds.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
     gVirtualBounds.right = gVirtualBounds.left + GetSystemMetrics(SM_CXVIRTUALSCREEN);
     gVirtualBounds.bottom = gVirtualBounds.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-    const int width = gVirtualBounds.right - gVirtualBounds.left;
-    const int height = gVirtualBounds.bottom - gVirtualBounds.top;
-    if (width <= 0 || height <= 0)
-    {
-        return false;
-    }
-
-    HDC desktopDc = GetDC(nullptr);
-    if (desktopDc == nullptr)
-    {
-        return false;
-    }
-
-    gSnapshotDc = CreateCompatibleDC(desktopDc);
-    gSnapshotBitmap = CreateCompatibleBitmap(desktopDc, width, height);
-    ReleaseDC(nullptr, desktopDc);
-
-    if (gSnapshotDc == nullptr || gSnapshotBitmap == nullptr)
-    {
-        ReleaseSnapshot();
-        return false;
-    }
-
-    gSnapshotPrevious = static_cast<HBITMAP>(SelectObject(gSnapshotDc, gSnapshotBitmap));
-    HDC sourceDc = GetDC(nullptr);
-    const BOOL copied = BitBlt(
-        gSnapshotDc, 0, 0, width, height, sourceDc,
-        gVirtualBounds.left, gVirtualBounds.top,
-        SRCCOPY | CAPTUREBLT);
-    ReleaseDC(nullptr, sourceDc);
-
-    if (!copied)
-    {
-        ReleaseSnapshot();
-        return false;
-    }
-
-    return true;
 }
 
 POINT ClampToVirtualScreen(POINT point)
@@ -219,28 +226,31 @@ POINT ClampToVirtualScreen(POINT point)
 
 COLORREF SampleAt(POINT screenPoint)
 {
+    if (gDesktopDc == nullptr)
+    {
+        return gSelectedColor;
+    }
+
     const POINT point = ClampToVirtualScreen(screenPoint);
-    const int x = point.x - gVirtualBounds.left;
-    const int y = point.y - gVirtualBounds.top;
-    return GetPixel(gSnapshotDc, x, y);
+    const COLORREF color = GetPixel(gDesktopDc, point.x, point.y);
+    return color == CLR_INVALID ? gSelectedColor : color;
 }
 
 void PaintLens(HWND window, HDC dc)
 {
     RECT client{};
     GetClientRect(window, &client);
-    FillRectColor(dc, client, RGB(17, 24, 39));
+    FillRoundRect(dc, client, RGB(17, 24, 39), RGB(51, 65, 85), Px(window, 10));
 
     const int padding = Px(window, 12);
     const int swatchSize = Px(window, 60);
     RECT swatch = MakeRect(padding, padding, swatchSize, swatchSize);
-    FillRectColor(dc, swatch, gSelectedColor);
-    FrameRect(dc, &swatch, static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH)));
+    FillRoundRect(dc, swatch, gSelectedColor, RGB(148, 163, 184), Px(window, 8));
 
-    RECT caption = MakeRect(swatch.right + Px(window, 14), padding, Px(window, 94), Px(window, 18));
+    RECT caption = MakeRect(swatch.right + Px(window, 14), padding, Px(window, 100), Px(window, 18));
     DrawTextBlock(dc, window, L"当前颜色", caption, 8, FW_BOLD, RGB(148, 163, 184), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
-    RECT value = MakeRect(swatch.right + Px(window, 14), padding + Px(window, 22), Px(window, 104), Px(window, 30));
+    RECT value = MakeRect(swatch.right + Px(window, 14), padding + Px(window, 22), Px(window, 110), Px(window, 30));
     DrawTextBlock(dc, window, ToHex(gSelectedColor), value, 12, FW_SEMIBOLD, RGB(255, 255, 255), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 }
 
@@ -251,8 +261,8 @@ void PositionLens(POINT cursor)
         return;
     }
 
-    const int width = Px(gLensWindow, 184);
-    const int height = Px(gLensWindow, 84);
+    const int width = Px(gLensWindow, 190);
+    const int height = Px(gLensWindow, 88);
     const int offset = Px(gLensWindow, 20);
     int x = cursor.x + offset;
     int y = cursor.y + offset;
@@ -298,7 +308,7 @@ void StopPicking(bool revealMain)
         DestroyWindow(overlay);
     }
 
-    ReleaseSnapshot();
+    ReleaseDesktopDc();
 
     if (revealMain && gMainWindow != nullptr)
     {
@@ -339,13 +349,21 @@ bool StartPicking()
         return true;
     }
 
+    RefreshVirtualBounds();
+    if (gVirtualBounds.right <= gVirtualBounds.left || gVirtualBounds.bottom <= gVirtualBounds.top)
+    {
+        SetStatus(L"无法获取桌面范围，请重试");
+        return false;
+    }
+
     ShowWindow(gMainWindow, SW_HIDE);
     DwmFlush();
 
-    if (!CaptureVirtualScreen())
+    gDesktopDc = GetDC(nullptr);
+    if (gDesktopDc == nullptr)
     {
         ShowWindow(gMainWindow, SW_SHOW);
-        SetStatus(L"无法创建屏幕快照，请重试");
+        SetStatus(L"无法读取屏幕颜色，请重试");
         return false;
     }
 
@@ -359,18 +377,19 @@ bool StartPicking()
 
     if (gOverlayWindow == nullptr)
     {
-        ReleaseSnapshot();
+        ReleaseDesktopDc();
         ShowWindow(gMainWindow, SW_SHOW);
         SetStatus(L"无法启动取色，请重试");
         return false;
     }
 
-    SetLayeredWindowAttributes(gOverlayWindow, 0, 1, LWA_ALPHA);
+    // The input surface is fully transparent, so it does not alter the sampled pixel.
+    SetLayeredWindowAttributes(gOverlayWindow, 0, 0, LWA_ALPHA);
 
     gLensWindow = CreateWindowExW(
         WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
         kLensClass, L"", WS_POPUP,
-        0, 0, Px(gOverlayWindow, 184), Px(gOverlayWindow, 84),
+        0, 0, Px(gOverlayWindow, 190), Px(gOverlayWindow, 88),
         nullptr, nullptr, gInstance, nullptr);
 
     gPicking = true;
@@ -379,7 +398,7 @@ bool StartPicking()
         gVirtualBounds.left, gVirtualBounds.top,
         gVirtualBounds.right - gVirtualBounds.left,
         gVirtualBounds.bottom - gVirtualBounds.top,
-        SWP_SHOWWINDOW);
+        SWP_SHOWWINDOW | SWP_NOACTIVATE);
     SetForegroundWindow(gOverlayWindow);
     SetFocus(gOverlayWindow);
 
@@ -388,25 +407,9 @@ bool StartPicking()
     return true;
 }
 
-RECT PickButtonRect(HWND window)
-{
-    const int margin = Px(window, 18);
-    return MakeRect(margin, Px(window, 226), Px(window, 404), Px(window, 44));
-}
-
-RECT CopyHexRect(HWND window)
-{
-    return MakeRect(Px(window, 324), Px(window, 116), Px(window, 80), Px(window, 28));
-}
-
-RECT CopyRgbRect(HWND window)
-{
-    return MakeRect(Px(window, 324), Px(window, 168), Px(window, 80), Px(window, 28));
-}
-
 void DrawButton(HDC dc, HWND window, const RECT& rect, const std::wstring& text, COLORREF background, COLORREF foreground)
 {
-    FillRoundRect(dc, rect, background, background, Px(window, 8));
+    FillRoundRect(dc, rect, background, background, Px(window, 9));
     DrawTextBlock(dc, window, text, rect, 9, FW_SEMIBOLD, foreground, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
@@ -414,37 +417,30 @@ void PaintMain(HWND window, HDC dc)
 {
     RECT client{};
     GetClientRect(window, &client);
+    const UiLayout layout = CalculateLayout(window);
+
     FillRectColor(dc, client, kCanvas);
+    FillRectColor(dc, layout.header, kInk);
 
-    const int margin = Px(window, 18);
-    const int cardWidth = Px(window, 404);
+    const int margin = Px(window, 20);
+    DrawTextBlock(dc, window, L"CYMRISE · UTILITY", MakeRect(margin, Px(window, 15), Px(window, 260), Px(window, 16)), 8, FW_BOLD, RGB(147, 197, 253), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    DrawTextBlock(dc, window, L"屏幕取色器", MakeRect(margin, Px(window, 38), client.right - margin * 2, Px(window, 32)), 18, FW_SEMIBOLD, RGB(255, 255, 255), DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
 
-    RECT header = MakeRect(0, 0, client.right, Px(window, 68));
-    FillRectColor(dc, header, kInk);
+    FillRoundRect(dc, layout.card, RGB(255, 255, 255), RGB(226, 232, 240), Px(window, 12));
+    FillRoundRect(dc, layout.swatch, gSelectedColor, RGB(203, 213, 225), Px(window, 10));
 
-    DrawTextBlock(dc, window, L"CYMRISE · UTILITY", MakeRect(margin, Px(window, 12), Px(window, 240), Px(window, 14)), 8, FW_BOLD, RGB(147, 197, 253), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    DrawTextBlock(dc, window, L"屏幕取色器", MakeRect(margin, Px(window, 28), Px(window, 260), Px(window, 28)), 15, FW_SEMIBOLD, RGB(255, 255, 255), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    DrawTextBlock(dc, window, L"HEX", layout.hexCaption, 8, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    DrawTextBlock(dc, window, ToHex(gSelectedColor), layout.hexValue, 13, FW_SEMIBOLD, kInk, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    DrawButton(dc, window, layout.copyHex, L"复制", kBlueSoft, RGB(29, 78, 216));
 
-    RECT card = MakeRect(margin, Px(window, 84), cardWidth, Px(window, 126));
-    FillRoundRect(dc, card, RGB(255, 255, 255), RGB(226, 232, 240), Px(window, 12));
+    DrawTextBlock(dc, window, L"RGB", layout.rgbCaption, 8, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    DrawTextBlock(dc, window, ToRgb(gSelectedColor), layout.rgbValue, 10, FW_NORMAL, RGB(51, 65, 85), DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    DrawButton(dc, window, layout.copyRgb, L"复制", RGB(248, 250, 252), RGB(51, 65, 85));
 
-    RECT swatch = MakeRect(card.left + Px(window, 14), card.top + Px(window, 16), Px(window, 92), Px(window, 92));
-    FillRoundRect(dc, swatch, gSelectedColor, RGB(203, 213, 225), Px(window, 10));
-
-    const int contentLeft = swatch.right + Px(window, 16);
-    DrawTextBlock(dc, window, L"HEX", MakeRect(contentLeft, card.top + Px(window, 15), Px(window, 160), Px(window, 16)), 8, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    DrawTextBlock(dc, window, ToHex(gSelectedColor), MakeRect(contentLeft, card.top + Px(window, 33), Px(window, 176), Px(window, 28)), 12, FW_SEMIBOLD, kInk, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    DrawButton(dc, window, CopyHexRect(window), L"复制", kBlueSoft, RGB(29, 78, 216));
-
-    DrawTextBlock(dc, window, L"RGB", MakeRect(contentLeft, card.top + Px(window, 67), Px(window, 160), Px(window, 16)), 8, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    DrawTextBlock(dc, window, ToRgb(gSelectedColor), MakeRect(contentLeft, card.top + Px(window, 85), Px(window, 176), Px(window, 22)), 9, FW_NORMAL, RGB(51, 65, 85), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    DrawButton(dc, window, CopyRgbRect(window), L"复制", RGB(248, 250, 252), RGB(51, 65, 85));
-
-    DrawButton(dc, window, PickButtonRect(window), L"开始取色", kBlue, RGB(255, 255, 255));
-
-    DrawTextBlock(dc, window, L"左键确认 · Space / Enter 确认 · Esc / 右键取消", MakeRect(margin, Px(window, 282), cardWidth, Px(window, 18)), 8, FW_NORMAL, kMuted, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    DrawTextBlock(dc, window, gStatus, MakeRect(margin, Px(window, 305), cardWidth, Px(window, 20)), 9, FW_NORMAL, RGB(5, 150, 105), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    DrawTextBlock(dc, window, L"Cymrise Color Picker · Native Win32", MakeRect(margin, Px(window, 329), cardWidth, Px(window, 16)), 8, FW_NORMAL, RGB(148, 163, 184), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawButton(dc, window, layout.pickButton, L"开始取色", kBlue, RGB(255, 255, 255));
+    DrawTextBlock(dc, window, L"左键确认 · Space / Enter 确认 · Esc / 右键取消", layout.hint, 8, FW_NORMAL, kMuted, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    DrawTextBlock(dc, window, gStatus, layout.status, 9, FW_NORMAL, kGreen, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    DrawTextBlock(dc, window, L"Cymrise Color Picker · v1.2.2", layout.footer, 8, FW_NORMAL, RGB(148, 163, 184), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 LRESULT CALLBACK MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
@@ -464,7 +460,8 @@ LRESULT CALLBACK MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM
         POINT point{};
         GetCursorPos(&point);
         ScreenToClient(window, &point);
-        if (Contains(PickButtonRect(window), point) || Contains(CopyHexRect(window), point) || Contains(CopyRgbRect(window), point))
+        const UiLayout layout = CalculateLayout(window);
+        if (Contains(layout.pickButton, point) || Contains(layout.copyHex, point) || Contains(layout.copyRgb, point))
         {
             SetCursor(LoadCursor(nullptr, IDC_HAND));
             return TRUE;
@@ -474,15 +471,16 @@ LRESULT CALLBACK MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM
     case WM_LBUTTONUP:
     {
         const POINT point{GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-        if (Contains(PickButtonRect(window), point))
+        const UiLayout layout = CalculateLayout(window);
+        if (Contains(layout.pickButton, point))
         {
             StartPicking();
         }
-        else if (Contains(CopyHexRect(window), point))
+        else if (Contains(layout.copyHex, point))
         {
             SetStatus(CopyText(ToHex(gSelectedColor)) ? L"HEX 已复制到剪贴板" : L"复制失败，请重试");
         }
-        else if (Contains(CopyRgbRect(window), point))
+        else if (Contains(layout.copyRgb, point))
         {
             SetStatus(CopyText(ToRgb(gSelectedColor)) ? L"RGB 已复制到剪贴板" : L"复制失败，请重试");
         }
@@ -643,8 +641,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int showCommand)
     }
 
     const DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    RECT initial{0, 0, 440, 386};
-    AdjustWindowRectExForDpi(&initial, style, FALSE, 0, 96);
+    const UINT systemDpi = GetDpiForSystem();
+    RECT initial{0, 0, 520, 450};
+    AdjustWindowRectExForDpi(&initial, style, FALSE, 0, systemDpi);
 
     gMainWindow = CreateWindowExW(
         0, kMainClass, kWindowTitle, style,
