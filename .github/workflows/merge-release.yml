@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure native build
-        run: cmake -S native -B build -G "Visual Studio 17 2022" -A x64
+        run: cmake -S native -B build -A x64
       - name: Build native release
         run: cmake --build build --config Release --target ColorPicker
       - name: Read version
