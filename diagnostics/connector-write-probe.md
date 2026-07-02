@@ -1,1 +1,1 @@
-Connector write probe. Safe to delete.
+Connector write probe: create and update both succeeded.
