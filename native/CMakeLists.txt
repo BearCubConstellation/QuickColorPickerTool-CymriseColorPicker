@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(ColorPicker VERSION 1.3.0 LANGUAGES CXX RC)
+project(ColorPicker VERSION 1.3.1 LANGUAGES CXX RC)
 
 function(add_color_picker target output_name)
   add_executable(${target} WIN32
