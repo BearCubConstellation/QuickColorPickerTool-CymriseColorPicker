@@ -1,8 +1,7 @@
-// Copyright (c) 2025 Cymrise
+// Copyright (c) 2025-2026 Cymrise
 // Licensed under the MIT License.
 
 using System.Drawing;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace CymriseColorPicker
@@ -11,135 +10,216 @@ namespace CymriseColorPicker
     {
         private System.ComponentModel.IContainer components = null;
 
-        // 声明控件
-        protected internal System.Windows.Forms.Button btnPick;
-        protected internal System.Windows.Forms.Label lblColor;
-        protected internal System.Windows.Forms.TextBox txtHex;
-        protected internal System.Windows.Forms.Label lblStatus;
-        protected internal System.Windows.Forms.Label lblTitle;
-        protected internal System.Windows.Forms.Label lblRgb;
-        protected internal System.Windows.Forms.Label author;
-        protected internal System.Windows.Forms.TextBox txtRgb;
-
+        private Panel headerPanel;
+        private Panel cardPanel;
+        private Panel pnlColorPreview;
+        private Label lblKicker;
+        private Label lblTitle;
+        private Label lblHexCaption;
+        private Label lblRgbCaption;
+        private Label lblHint;
+        private Label lblStatus;
+        private Label lblFooter;
+        private TextBox txtHex;
+        private TextBox txtRgb;
+        private Button btnPick;
+        private Button btnCopyHex;
+        private Button btnCopyRgb;
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && components != null)
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
         private void InitializeComponent()
         {
-            this.btnPick = new System.Windows.Forms.Button();
-            this.lblColor = new System.Windows.Forms.Label();
-            this.txtHex = new System.Windows.Forms.TextBox();
-            this.lblStatus = new System.Windows.Forms.Label();
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.author = new System.Windows.Forms.Label();
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CymriseColorPicker.CymriseColorPicker.ico"))
-            {
-                if (stream != null) this.Icon = new Icon(stream);
-            }
-            this.SuspendLayout();
-            //
-            // btnPick
-            //
-            this.btnPick.Location = new System.Drawing.Point(20, 80);
-            this.btnPick.Name = "btnPick";
-            this.btnPick.Size = new System.Drawing.Size(100, 30);
-            this.btnPick.TabIndex = 0;
-            this.btnPick.Text = "点击取色";
-            this.btnPick.UseVisualStyleBackColor = true;
-            this.btnPick.Click += new System.EventHandler(this.btnPick_Click);
-            //
-            // lblColor
-            //
-            this.lblColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblColor.Location = new System.Drawing.Point(20, 20);
-            this.lblColor.Name = "lblColor";
-            this.lblColor.Size = new System.Drawing.Size(100, 50);
-            this.lblColor.TabIndex = 1;
-            //
-            // txtHex
-            //
-            this.txtHex.Location = new System.Drawing.Point(170, 12);
-            this.txtHex.Name = "txtHex";
-            this.txtHex.ReadOnly = true;
-            this.txtHex.Size = new System.Drawing.Size(100, 21);
-            this.txtHex.TabIndex = 2;
-            //
-            // lblStatus
-            //
-            this.lblStatus.Location = new System.Drawing.Point(20, 120);
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(205, 20);
-            this.lblStatus.TabIndex = 3;
-            this.lblStatus.Text = "就绪";
-            //
-            // lblTitle
-            //
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Location = new System.Drawing.Point(130, 15);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(41, 12);
-            this.lblTitle.TabIndex = 4;
-            this.lblTitle.Text = "HEX:";
+            headerPanel = new Panel();
+            cardPanel = new Panel();
+            pnlColorPreview = new Panel();
+            lblKicker = new Label();
+            lblTitle = new Label();
+            lblHexCaption = new Label();
+            lblRgbCaption = new Label();
+            lblHint = new Label();
+            lblStatus = new Label();
+            lblFooter = new Label();
+            txtHex = new TextBox();
+            txtRgb = new TextBox();
+            btnPick = new Button();
+            btnCopyHex = new Button();
+            btnCopyRgb = new Button();
 
+            SuspendLayout();
 
-            // RGB标题标签
-            this.lblRgb = new System.Windows.Forms.Label();
-            this.lblRgb.AutoSize = true;
-            this.lblRgb.Location = new System.Drawing.Point(130, 60);
-            this.lblRgb.Name = "lblRgb";
-            this.lblRgb.Size = new System.Drawing.Size(35, 12);
-            this.lblRgb.Text = "RGB:";
+            headerPanel.BackColor = Color.FromArgb(15, 23, 42);
+            headerPanel.Dock = DockStyle.Top;
+            headerPanel.Location = new Point(0, 0);
+            headerPanel.Name = "headerPanel";
+            headerPanel.Size = new Size(440, 68);
 
-            // RGB值文本框
-            this.txtRgb = new System.Windows.Forms.TextBox();
-            this.txtRgb.Location = new System.Drawing.Point(175, 55);
-            this.txtRgb.Name = "txtRgb";
-            this.txtRgb.ReadOnly = true;
-            this.txtRgb.Size = new System.Drawing.Size(100, 21);
-            this.txtRgb.TabIndex = 5;
+            lblKicker.AutoSize = true;
+            lblKicker.Font = new Font("Segoe UI", 7.5F, FontStyle.Bold);
+            lblKicker.ForeColor = Color.FromArgb(147, 197, 253);
+            lblKicker.Location = new Point(20, 13);
+            lblKicker.Name = "lblKicker";
+            lblKicker.Text = "CYMRISE · UTILITY";
 
-            this.author.Location = new System.Drawing.Point(220, 118);
-            this.author.Name = "author";
-            this.author.Size = new System.Drawing.Size(250, 20);
-            this.author.TabIndex = 6;
-            this.author.Text = "By Cymrise";
-            this.author.ForeColor = System.Drawing.Color.LightGray;
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Segoe UI Semibold", 15F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(18, 29);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Text = "屏幕取色器";
 
-            author.Click += (s, e) =>
-                MessageBox.Show("作者: Cymrise\n网站: https://cymrise.cn", "关于");
-            // author.Click += (s, e) =>
-            //     MessageBox.Show("Author: Cymrise\nSite: https://cymrise.cn", "About");
+            headerPanel.Controls.Add(lblKicker);
+            headerPanel.Controls.Add(lblTitle);
 
-            // 禁止更改大小
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = true;
+            cardPanel.BackColor = Color.White;
+            cardPanel.BorderStyle = BorderStyle.FixedSingle;
+            cardPanel.Location = new Point(18, 84);
+            cardPanel.Name = "cardPanel";
+            cardPanel.Size = new Size(404, 124);
 
-            //
-            // MainForm
-            //
-            this.ClientSize = new System.Drawing.Size(300, 140);
-            this.Controls.Add(this.lblTitle);
-            this.Controls.Add(this.lblStatus);
-            this.Controls.Add(this.txtHex);
-            this.Controls.Add(this.lblColor);
-            this.Controls.Add(this.btnPick);
-            this.Controls.Add(this.lblRgb);
-            this.Controls.Add(this.txtRgb);
-            this.Controls.Add(this.author);
-            this.Name = "MainForm";
-            this.Text = "屏幕取色";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            pnlColorPreview.BackColor = Color.FromArgb(59, 130, 246);
+            pnlColorPreview.BorderStyle = BorderStyle.FixedSingle;
+            pnlColorPreview.Location = new Point(13, 15);
+            pnlColorPreview.Name = "pnlColorPreview";
+            pnlColorPreview.Size = new Size(92, 92);
 
+            lblHexCaption.AutoSize = true;
+            lblHexCaption.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            lblHexCaption.ForeColor = Color.FromArgb(100, 116, 139);
+            lblHexCaption.Location = new Point(122, 14);
+            lblHexCaption.Name = "lblHexCaption";
+            lblHexCaption.Text = "HEX";
+
+            txtHex.BackColor = Color.White;
+            txtHex.BorderStyle = BorderStyle.FixedSingle;
+            txtHex.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            txtHex.Location = new Point(122, 31);
+            txtHex.Name = "txtHex";
+            txtHex.ReadOnly = true;
+            txtHex.Size = new Size(174, 27);
+            txtHex.TabIndex = 1;
+            txtHex.TextAlign = HorizontalAlignment.Center;
+
+            btnCopyHex.BackColor = Color.FromArgb(239, 246, 255);
+            btnCopyHex.Cursor = Cursors.Hand;
+            btnCopyHex.FlatAppearance.BorderSize = 0;
+            btnCopyHex.FlatStyle = FlatStyle.Flat;
+            btnCopyHex.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnCopyHex.ForeColor = Color.FromArgb(29, 78, 216);
+            btnCopyHex.Location = new Point(306, 31);
+            btnCopyHex.Name = "btnCopyHex";
+            btnCopyHex.Size = new Size(82, 27);
+            btnCopyHex.TabIndex = 2;
+            btnCopyHex.Text = "复制";
+            btnCopyHex.UseVisualStyleBackColor = false;
+            btnCopyHex.Click += btnCopyHex_Click;
+
+            lblRgbCaption.AutoSize = true;
+            lblRgbCaption.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            lblRgbCaption.ForeColor = Color.FromArgb(100, 116, 139);
+            lblRgbCaption.Location = new Point(122, 68);
+            lblRgbCaption.Name = "lblRgbCaption";
+            lblRgbCaption.Text = "RGB";
+
+            txtRgb.BackColor = Color.White;
+            txtRgb.BorderStyle = BorderStyle.FixedSingle;
+            txtRgb.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
+            txtRgb.Location = new Point(122, 84);
+            txtRgb.Name = "txtRgb";
+            txtRgb.ReadOnly = true;
+            txtRgb.Size = new Size(174, 24);
+            txtRgb.TabIndex = 3;
+            txtRgb.TextAlign = HorizontalAlignment.Center;
+
+            btnCopyRgb.BackColor = Color.FromArgb(248, 250, 252);
+            btnCopyRgb.Cursor = Cursors.Hand;
+            btnCopyRgb.FlatAppearance.BorderSize = 0;
+            btnCopyRgb.FlatStyle = FlatStyle.Flat;
+            btnCopyRgb.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnCopyRgb.ForeColor = Color.FromArgb(51, 65, 85);
+            btnCopyRgb.Location = new Point(306, 82);
+            btnCopyRgb.Name = "btnCopyRgb";
+            btnCopyRgb.Size = new Size(82, 27);
+            btnCopyRgb.TabIndex = 4;
+            btnCopyRgb.Text = "复制";
+            btnCopyRgb.UseVisualStyleBackColor = false;
+            btnCopyRgb.Click += btnCopyRgb_Click;
+
+            cardPanel.Controls.Add(pnlColorPreview);
+            cardPanel.Controls.Add(lblHexCaption);
+            cardPanel.Controls.Add(txtHex);
+            cardPanel.Controls.Add(btnCopyHex);
+            cardPanel.Controls.Add(lblRgbCaption);
+            cardPanel.Controls.Add(txtRgb);
+            cardPanel.Controls.Add(btnCopyRgb);
+
+            btnPick.BackColor = Color.FromArgb(37, 99, 235);
+            btnPick.Cursor = Cursors.Hand;
+            btnPick.FlatAppearance.BorderSize = 0;
+            btnPick.FlatStyle = FlatStyle.Flat;
+            btnPick.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
+            btnPick.ForeColor = Color.White;
+            btnPick.Location = new Point(18, 226);
+            btnPick.Name = "btnPick";
+            btnPick.Size = new Size(404, 44);
+            btnPick.TabIndex = 0;
+            btnPick.Text = "开始取色";
+            btnPick.UseVisualStyleBackColor = false;
+            btnPick.Click += btnPick_Click;
+
+            lblHint.AutoSize = false;
+            lblHint.Font = new Font("Segoe UI", 8.5F, FontStyle.Regular);
+            lblHint.ForeColor = Color.FromArgb(100, 116, 139);
+            lblHint.Location = new Point(18, 281);
+            lblHint.Name = "lblHint";
+            lblHint.Size = new Size(404, 18);
+            lblHint.Text = "左键确认 · Space / Enter 确认 · Esc / 右键取消";
+            lblHint.TextAlign = ContentAlignment.MiddleCenter;
+
+            lblStatus.AutoSize = false;
+            lblStatus.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
+            lblStatus.ForeColor = Color.FromArgb(5, 150, 105);
+            lblStatus.Location = new Point(18, 304);
+            lblStatus.Name = "lblStatus";
+            lblStatus.Size = new Size(404, 20);
+            lblStatus.TextAlign = ContentAlignment.MiddleCenter;
+
+            lblFooter.AutoSize = false;
+            lblFooter.Font = new Font("Segoe UI", 8F, FontStyle.Regular);
+            lblFooter.ForeColor = Color.FromArgb(148, 163, 184);
+            lblFooter.Location = new Point(18, 327);
+            lblFooter.Name = "lblFooter";
+            lblFooter.Size = new Size(404, 16);
+            lblFooter.Text = "Cymrise Color Picker · v1.1.0";
+            lblFooter.TextAlign = ContentAlignment.MiddleCenter;
+
+            AutoScaleMode = AutoScaleMode.Dpi;
+            BackColor = Color.FromArgb(248, 250, 252);
+            ClientSize = new Size(440, 352);
+            Controls.Add(headerPanel);
+            Controls.Add(cardPanel);
+            Controls.Add(btnPick);
+            Controls.Add(lblHint);
+            Controls.Add(lblStatus);
+            Controls.Add(lblFooter);
+            Font = new Font("Segoe UI", 9F, FontStyle.Regular);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            MinimizeBox = true;
+            Name = "MainForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Cymrise Color Picker";
+            FormClosing += MainForm_FormClosing;
+
+            ResumeLayout(false);
         }
     }
 }

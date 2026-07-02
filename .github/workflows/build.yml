@@ -1,0 +1,43 @@
+name: Build Cymrise Color Picker
+
+on:
+  push:
+    branches: [main, "release/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Publish win-x64
+        run: >
+          dotnet publish -c Release -r win-x64 --self-contained false
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o ./publish/win-x64
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: CymriseColorPicker-win-x64
+          path: publish/win-x64
+          if-no-files-found: error
