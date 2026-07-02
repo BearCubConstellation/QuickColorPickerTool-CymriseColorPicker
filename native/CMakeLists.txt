@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 project(CymriseColorPicker VERSION 1.2.2 LANGUAGES CXX RC)
 
 add_executable(ColorPicker WIN32
-  src/main.cpp
+  src/main_native.cpp
   resources/app.rc
 )
 
