@@ -16,7 +16,17 @@ jobs:
       - name: Configure native build
         run: cmake -S native -B build -A x64
       - name: Build native release
-        run: cmake --build build --config Release --target ColorPicker
+        shell: pwsh
+        run: |
+          cmake --build build --config Release --target ColorPicker *>&1 | Tee-Object -FilePath native-build.log
+          exit $LASTEXITCODE
+      - name: Upload native build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-build-log
+          path: native-build.log
+          if-no-files-found: warn
       - name: Read version
         id: version
         shell: pwsh
