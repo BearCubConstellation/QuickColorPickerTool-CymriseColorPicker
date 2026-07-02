@@ -17,27 +17,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+      - name: Configure native build
+        run: cmake -S native -B build -G "Visual Studio 17 2022" -A x64
 
-      - name: Restore
-        run: dotnet restore
+      - name: Build native release
+        run: cmake --build build --config Release --target ColorPicker
 
-      - name: Build
-        run: dotnet build -c Release --no-restore
-
-      - name: Package lightweight exe
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path publish/win-x64 | Out-Null
-          Copy-Item bin/Release/net48/ColorPicker.exe publish/win-x64/ColorPicker.exe
-          if (Test-Path bin/Release/net48/ColorPicker.exe.config) { Copy-Item bin/Release/net48/ColorPicker.exe.config publish/win-x64/ }
-
-      - name: Upload package
+      - name: Upload executable
         uses: actions/upload-artifact@v4
         with:
-          name: CymriseColorPicker-lightweight-win-x64
-          path: publish/win-x64
+          name: CymriseColorPicker-win-x64
+          path: build/Release/ColorPicker.exe
           if-no-files-found: error
