@@ -4,12 +4,17 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
 
 jobs:
   release:
+    if: >-
+      github.event_name != 'issues' ||
+      github.event.issue.title == '[release] Cymrise Color Picker v1.2.2'
     runs-on: windows-latest
 
     steps:
