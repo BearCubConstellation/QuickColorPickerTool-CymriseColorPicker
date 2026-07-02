@@ -38,6 +38,6 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.value }}
           name: Cymrise Color Picker v${{ steps.version.outputs.value }}
-          body_path: RELEASE_NOTES_v1.2.1.md
+          body_path: RELEASE_NOTES_v1.2.2.md
           files: CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip
           fail_on_unmatched_files: true
