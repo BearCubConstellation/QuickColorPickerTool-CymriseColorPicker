@@ -10,34 +10,34 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+
+      - name: Configure native build
+        run: cmake -S native -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build native release
+        run: cmake --build build --config Release --target ColorPicker
+
       - name: Read version
         id: version
         shell: pwsh
         run: |
-          [xml]$project = Get-Content CymriseColorPicker.csproj
-          $version = $project.Project.PropertyGroup.Version
+          $version = (Get-Content VERSION -Raw).Trim()
           "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-      - name: Build Release
-        shell: pwsh
-        run: dotnet build CymriseColorPicker.csproj -c Release
-      - name: Package lightweight exe
+
+      - name: Package single executable
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path publish/win-x64 | Out-Null
-          Copy-Item bin/Release/net48/ColorPicker.exe publish/win-x64/ColorPicker.exe
-          if (Test-Path bin/Release/net48/ColorPicker.exe.config) { Copy-Item bin/Release/net48/ColorPicker.exe.config publish/win-x64/ }
-          Compress-Archive -Path publish/win-x64/* -DestinationPath "CymriseColorPicker-v${{ steps.version.outputs.value }}-lightweight-win-x64.zip"
+          Compress-Archive -Path build/Release/ColorPicker.exe -DestinationPath "CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.value }}
           name: Cymrise Color Picker v${{ steps.version.outputs.value }}
-          body_path: RELEASE_NOTES_v1.1.2.md
-          files: CymriseColorPicker-v${{ steps.version.outputs.value }}-lightweight-win-x64.zip
+          body_path: RELEASE_NOTES_v1.2.0.md
+          files: CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip
+          fail_on_unmatched_files: true
