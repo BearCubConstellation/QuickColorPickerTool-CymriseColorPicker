@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.3.1
+
+### Improved
+
+- Tightened the three bottom text rows into one compact status group.
+- Increased the size and hierarchy of HEX, RGB, Copy controls, and the primary picker action.
+- Unified both Copy buttons with the same blue-tinted visual treatment.
+- Refined the dynamic title shadow for better readability on the dark header.
+
 ## v1.3.0
 
 ### Added
