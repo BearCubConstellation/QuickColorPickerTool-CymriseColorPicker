@@ -18,11 +18,12 @@ Extract the package and run the included `.exe`. No .NET, Java, VC++ Runtime, in
 - Native Win32 C++ and static C++ runtime.
 - Chinese and English executables built from the same source code.
 - Compact tool-sized interface with Per-Monitor V2 DPI support.
+- Clear visual hierarchy: larger HEX, RGB, Copy controls, and primary picker action.
+- Unified Copy controls with the same blue-tinted appearance.
 - Multi-monitor, negative-coordinate, and mixed-scaling support.
 - Frozen desktop snapshot while picking: the screen behind the picker cannot receive clicks.
 - Color preview lens follows the mouse in real time.
 - The header title starts white and adopts the confirmed color after a pick.
-- Copy HEX or RGB values independently.
 - `By cymrise` opens an About window with a clickable GitHub project link.
 
 ## Usage
@@ -71,11 +72,12 @@ build\Release\ColorPicker-en.exe
 - 原生 Win32 C++，使用静态 C++ 运行库。
 - 中英文程序由同一份源码构建，功能保持一致。
 - 紧凑小工具界面，支持 Per-Monitor V2 DPI 感知。
+- HEX、RGB、复制按钮和主取色按钮采用更清晰、更大的信息层级。
+- 两个复制按钮统一为相同的浅蓝视觉样式。
 - 支持多显示器、负坐标和不同缩放比例。
 - 取色时生成桌面快照并冻结画面，底层桌面不会接收点击。
 - 当前颜色浮窗实时跟随鼠标。
 - 顶部标题初始为白色，确认取色后会同步变为该颜色。
-- 支持独立复制 HEX 与 RGB。
 - 点击 `By cymrise` 可打开项目说明，并跳转至 GitHub 仓库。
 
 ## 使用方式
