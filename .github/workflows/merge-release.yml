@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true && github.event.pull_request.title == '[release] Cymrise Color Picker v1.2.2'
+    if: github.event.pull_request.title == '[release] Cymrise Color Picker v1.2.2'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
