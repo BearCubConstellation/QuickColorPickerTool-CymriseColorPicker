@@ -10,13 +10,14 @@
 #include <cstring>
 #include <string>
 
+#include "ui_texts.h"
+
 namespace
 {
 constexpr wchar_t kMainClass[] = L"CymriseColorPickerMain";
 constexpr wchar_t kOverlayClass[] = L"CymriseColorPickerOverlay";
 constexpr wchar_t kLensClass[] = L"CymriseColorPickerLens";
 constexpr wchar_t kAboutClass[] = L"CymriseColorPickerAbout";
-constexpr wchar_t kWindowTitle[] = L"ColorPicker";
 constexpr wchar_t kRepositoryUrl[] = L"https://github.com/BearCubConstellation/ColorPicker";
 constexpr DWORD kMainStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 constexpr UINT_PTR kPreviewTimer = 1;
@@ -43,8 +44,9 @@ int gVirtualRight = 0;
 int gVirtualBottom = 0;
 POINT gCursor{};
 COLORREF gColor = RGB(52, 52, 52);
+COLORREF gTitleColor = RGB(255, 255, 255);
 bool gPicking = false;
-std::wstring gStatus = L"就绪，可开始取色";
+std::wstring gStatus = kReady;
 
 struct Layout
 {
@@ -113,6 +115,11 @@ std::wstring Rgb(COLORREF color)
     return buffer;
 }
 
+int Luminance(COLORREF color)
+{
+    return (GetRValue(color) * 299 + GetGValue(color) * 587 + GetBValue(color) * 114) / 1000;
+}
+
 HFONT Font(HWND hwnd, int size, int weight = FW_NORMAL, bool underline = false)
 {
     return CreateFontW(-Dp(hwnd, size), 0, 0, 0, weight, FALSE, underline, FALSE,
@@ -151,43 +158,52 @@ void Round(HDC dc, const RECT& rect, COLORREF fill, COLORREF stroke, int radius)
     DeleteObject(pen);
 }
 
+void DynamicTitle(HDC dc, HWND hwnd, RECT rect)
+{
+    RECT shadowRect = rect;
+    OffsetRect(&shadowRect, Dp(hwnd, 1), Dp(hwnd, 1));
+    const COLORREF shadow = Luminance(gTitleColor) < 118 ? RGB(255, 255, 255) : RGB(15, 23, 42);
+    Text(dc, hwnd, kScreenTitle, shadowRect, 14, FW_SEMIBOLD, shadow, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Text(dc, hwnd, kScreenTitle, rect, 14, FW_SEMIBOLD, gTitleColor, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+}
+
 Layout GetLayout(HWND hwnd)
 {
     RECT client{};
     GetClientRect(hwnd, &client);
 
     const int width = static_cast<int>(client.right - client.left);
-    const int margin = Dp(hwnd, 16);
+    const int margin = Dp(hwnd, 14);
     const int cardWidth = width - margin * 2;
-    const int headerHeight = Dp(hwnd, 50);
-    const int cardTop = headerHeight + Dp(hwnd, 12);
-    const int cardHeight = Dp(hwnd, 108);
+    const int headerHeight = Dp(hwnd, 40);
+    const int cardTop = headerHeight + Dp(hwnd, 8);
+    const int cardHeight = Dp(hwnd, 96);
     const int inner = Dp(hwnd, 12);
-    const int copyWidth = Dp(hwnd, 62);
-    const int copyHeight = Dp(hwnd, 30);
-    const int swatchSize = Dp(hwnd, 72);
+    const int copyWidth = Dp(hwnd, 60);
+    const int copyHeight = Dp(hwnd, 27);
+    const int swatchSize = Dp(hwnd, 64);
 
     Layout layout{};
     layout.header = Rect(0, 0, width, headerHeight);
     layout.card = Rect(margin, cardTop, cardWidth, cardHeight);
-    layout.swatch = Rect(layout.card.left + inner, layout.card.top + Dp(hwnd, 18), swatchSize, swatchSize);
+    layout.swatch = Rect(layout.card.left + inner, layout.card.top + Dp(hwnd, 16), swatchSize, swatchSize);
 
     const int contentLeft = layout.swatch.right + Dp(hwnd, 14);
     const int copyLeft = layout.card.right - inner - copyWidth;
     const int valueWidth = copyLeft - Dp(hwnd, 10) - contentLeft;
 
-    layout.hexLabel = Rect(contentLeft, layout.card.top + Dp(hwnd, 12), valueWidth, Dp(hwnd, 15));
-    layout.hexValue = Rect(contentLeft, layout.card.top + Dp(hwnd, 29), valueWidth, Dp(hwnd, 25));
-    layout.hexCopy = Rect(copyLeft, layout.card.top + Dp(hwnd, 22), copyWidth, copyHeight);
+    layout.hexLabel = Rect(contentLeft, layout.card.top + Dp(hwnd, 10), valueWidth, Dp(hwnd, 14));
+    layout.hexValue = Rect(contentLeft, layout.card.top + Dp(hwnd, 25), valueWidth, Dp(hwnd, 24));
+    layout.hexCopy = Rect(copyLeft, layout.card.top + Dp(hwnd, 19), copyWidth, copyHeight);
 
-    layout.rgbLabel = Rect(contentLeft, layout.card.top + Dp(hwnd, 61), valueWidth, Dp(hwnd, 15));
-    layout.rgbValue = Rect(contentLeft, layout.card.top + Dp(hwnd, 78), valueWidth, Dp(hwnd, 20));
-    layout.rgbCopy = Rect(copyLeft, layout.card.top + Dp(hwnd, 70), copyWidth, copyHeight);
+    layout.rgbLabel = Rect(contentLeft, layout.card.top + Dp(hwnd, 51), valueWidth, Dp(hwnd, 14));
+    layout.rgbValue = Rect(contentLeft, layout.card.top + Dp(hwnd, 66), valueWidth, Dp(hwnd, 19));
+    layout.rgbCopy = Rect(copyLeft, layout.card.top + Dp(hwnd, 60), copyWidth, copyHeight);
 
-    layout.pick = Rect(margin, layout.card.bottom + Dp(hwnd, 14), cardWidth, Dp(hwnd, 40));
-    layout.hint = Rect(margin, layout.pick.bottom + Dp(hwnd, 12), cardWidth, Dp(hwnd, 16));
-    layout.status = Rect(margin, layout.hint.bottom + Dp(hwnd, 5), cardWidth, Dp(hwnd, 18));
-    layout.byCymrise = Rect(margin, layout.status.bottom + Dp(hwnd, 5), cardWidth, Dp(hwnd, 16));
+    layout.pick = Rect(margin, layout.card.bottom + Dp(hwnd, 10), cardWidth, Dp(hwnd, 36));
+    layout.hint = Rect(margin, layout.pick.bottom + Dp(hwnd, 8), cardWidth, Dp(hwnd, 14));
+    layout.status = Rect(margin, layout.hint.bottom + Dp(hwnd, 3), cardWidth, Dp(hwnd, 16));
+    layout.byCymrise = Rect(margin, layout.status.bottom + Dp(hwnd, 3), cardWidth, Dp(hwnd, 14));
     return layout;
 }
 
@@ -195,8 +211,8 @@ RECT GetAboutLinkRect(HWND hwnd)
 {
     RECT client{};
     GetClientRect(hwnd, &client);
-    const int margin = Dp(hwnd, 20);
-    return Rect(margin, Dp(hwnd, 96), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 32));
+    const int margin = Dp(hwnd, 18);
+    return Rect(margin, Dp(hwnd, 88), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 28));
 }
 
 bool Copy(const std::wstring& value)
@@ -336,11 +352,11 @@ void PaintLens(HWND hwnd, HDC dc)
     Round(dc, client, RGB(17, 24, 39), RGB(51, 65, 85), Dp(hwnd, 8));
 
     const int padding = Dp(hwnd, 10);
-    const int swatchSize = Dp(hwnd, 48);
+    const int swatchSize = Dp(hwnd, 44);
     const RECT swatch = Rect(padding, padding, swatchSize, swatchSize);
     Round(dc, swatch, gColor, RGB(148, 163, 184), Dp(hwnd, 6));
-    Text(dc, hwnd, L"当前颜色", Rect(swatch.right + Dp(hwnd, 10), padding, Dp(hwnd, 92), Dp(hwnd, 16)), 8, FW_BOLD, RGB(148, 163, 184), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    Text(dc, hwnd, Hex(gColor), Rect(swatch.right + Dp(hwnd, 10), padding + Dp(hwnd, 18), Dp(hwnd, 106), Dp(hwnd, 26)), 11, FW_SEMIBOLD, RGB(255, 255, 255), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Text(dc, hwnd, kCurrentColor, Rect(swatch.right + Dp(hwnd, 10), padding, Dp(hwnd, 110), Dp(hwnd, 15)), 7, FW_BOLD, RGB(148, 163, 184), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Text(dc, hwnd, Hex(gColor), Rect(swatch.right + Dp(hwnd, 10), padding + Dp(hwnd, 17), Dp(hwnd, 118), Dp(hwnd, 22)), 10, FW_SEMIBOLD, RGB(255, 255, 255), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 }
 
 void PlaceLens(POINT point)
@@ -350,9 +366,9 @@ void PlaceLens(POINT point)
         return;
     }
 
-    const int width = Dp(gLens, 170);
-    const int height = Dp(gLens, 68);
-    const int offset = Dp(gLens, 18);
+    const int width = Dp(gLens, 178);
+    const int height = Dp(gLens, 64);
+    const int offset = Dp(gLens, 16);
     int x = static_cast<int>(point.x) + offset;
     int y = static_cast<int>(point.y) + offset;
 
@@ -409,8 +425,9 @@ void Finish()
     if (!gPicking) return;
 
     gColor = ReadPixel(gCursor);
+    gTitleColor = gColor;
     const std::wstring value = Hex(gColor);
-    Status(Copy(value) ? L"已复制 HEX：" + value : L"已取色，可点击复制按钮重试");
+    Status(Copy(value) ? std::wstring(kCopiedHexPrefix) + value : kPickedNoCopy);
     StopPicking(true);
 }
 
@@ -418,7 +435,7 @@ void Cancel()
 {
     if (!gPicking) return;
 
-    Status(L"已取消取色");
+    Status(kCancelled);
     StopPicking(true);
 }
 
@@ -429,7 +446,7 @@ bool StartPicking()
     RefreshDesktopBounds();
     if (gVirtualRight <= gVirtualLeft || gVirtualBottom <= gVirtualTop)
     {
-        Status(L"无法获取桌面范围，请重试");
+        Status(kCannotBounds);
         return false;
     }
 
@@ -438,7 +455,7 @@ bool StartPicking()
     if (!CaptureSnapshot())
     {
         ShowWindow(gMain, SW_SHOW);
-        Status(L"无法冻结桌面，请重试");
+        Status(kCannotFreeze);
         return false;
     }
 
@@ -449,12 +466,12 @@ bool StartPicking()
     {
         ReleaseSnapshot();
         ShowWindow(gMain, SW_SHOW);
-        Status(L"无法启动取色，请重试");
+        Status(kCannotStart);
         return false;
     }
 
     gLens = CreateWindowExW(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST, kLensClass, L"", WS_POPUP,
-        0, 0, Dp(gOverlay, 170), Dp(gOverlay, 68), nullptr, nullptr, gInstance, nullptr);
+        0, 0, Dp(gOverlay, 178), Dp(gOverlay, 64), nullptr, nullptr, gInstance, nullptr);
 
     gPicking = true;
     ShowWindow(gOverlay, SW_SHOW);
@@ -480,11 +497,11 @@ void ShowAbout()
     }
 
     const UINT dpi = gMain == nullptr ? GetDpiForSystem() : GetDpiForWindow(gMain);
-    RECT bounds{0, 0, Scale(360, dpi), Scale(170, dpi)};
+    RECT bounds{0, 0, Scale(370, dpi), Scale(160, dpi)};
     const DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     AdjustWindowRectExForDpi(&bounds, style, FALSE, 0, dpi);
 
-    gAbout = CreateWindowExW(WS_EX_DLGMODALFRAME, kAboutClass, L"About ColorPicker", style,
+    gAbout = CreateWindowExW(WS_EX_DLGMODALFRAME, kAboutClass, kAboutTitle, style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         static_cast<int>(bounds.right - bounds.left), static_cast<int>(bounds.bottom - bounds.top),
         gMain, nullptr, gInstance, nullptr);
@@ -498,8 +515,8 @@ void ShowAbout()
 
 void Button(HDC dc, HWND hwnd, const RECT& rect, const std::wstring& value, COLORREF back, COLORREF fore)
 {
-    Round(dc, rect, back, back, Dp(hwnd, 8));
-    Text(dc, hwnd, value, rect, 9, FW_SEMIBOLD, fore, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    Round(dc, rect, back, back, Dp(hwnd, 7));
+    Text(dc, hwnd, value, rect, 8, FW_SEMIBOLD, fore, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 void PaintMain(HWND hwnd, HDC dc)
@@ -511,24 +528,24 @@ void PaintMain(HWND hwnd, HDC dc)
     Fill(dc, client, kCanvas);
     Fill(dc, layout.header, kInk);
 
-    const int margin = Dp(hwnd, 16);
-    Text(dc, hwnd, L"屏幕取色器", Rect(margin, Dp(hwnd, 9), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 28)), 16, FW_SEMIBOLD, RGB(255, 255, 255), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    const int margin = Dp(hwnd, 14);
+    DynamicTitle(dc, hwnd, Rect(margin, Dp(hwnd, 5), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 28)));
 
-    Round(dc, layout.card, RGB(255, 255, 255), RGB(226, 232, 240), Dp(hwnd, 10));
-    Round(dc, layout.swatch, gColor, RGB(203, 213, 225), Dp(hwnd, 8));
+    Round(dc, layout.card, RGB(255, 255, 255), RGB(226, 232, 240), Dp(hwnd, 9));
+    Round(dc, layout.swatch, gColor, RGB(203, 213, 225), Dp(hwnd, 7));
 
-    Text(dc, hwnd, L"HEX", layout.hexLabel, 8, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    Text(dc, hwnd, Hex(gColor), layout.hexValue, 12, FW_SEMIBOLD, kInk, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    Button(dc, hwnd, layout.hexCopy, L"复制", kBlueSoft, RGB(29, 78, 216));
+    Text(dc, hwnd, L"HEX", layout.hexLabel, 7, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Text(dc, hwnd, Hex(gColor), layout.hexValue, 11, FW_SEMIBOLD, kInk, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Button(dc, hwnd, layout.hexCopy, kCopy, kBlueSoft, RGB(29, 78, 216));
 
-    Text(dc, hwnd, L"RGB", layout.rgbLabel, 8, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    Text(dc, hwnd, Rgb(gColor), layout.rgbValue, 9, FW_NORMAL, RGB(51, 65, 85), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    Button(dc, hwnd, layout.rgbCopy, L"复制", RGB(248, 250, 252), RGB(51, 65, 85));
+    Text(dc, hwnd, L"RGB", layout.rgbLabel, 7, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Text(dc, hwnd, Rgb(gColor), layout.rgbValue, 8, FW_NORMAL, RGB(51, 65, 85), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Button(dc, hwnd, layout.rgbCopy, kCopy, RGB(248, 250, 252), RGB(51, 65, 85));
 
-    Button(dc, hwnd, layout.pick, L"开始取色", kBlue, RGB(255, 255, 255));
-    Text(dc, hwnd, L"左键确认 · Space/Enter 确认 · Esc/右键取消", layout.hint, 7, FW_NORMAL, kMuted, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    Text(dc, hwnd, gStatus, layout.status, 8, FW_NORMAL, kGreen, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    Text(dc, hwnd, L"By cymrise", layout.byCymrise, 8, FW_NORMAL, RGB(148, 163, 184), DT_CENTER | DT_VCENTER | DT_SINGLELINE, true);
+    Button(dc, hwnd, layout.pick, kPickColor, kBlue, RGB(255, 255, 255));
+    Text(dc, hwnd, kHint, layout.hint, 6, FW_NORMAL, kMuted, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    Text(dc, hwnd, gStatus, layout.status, 7, FW_NORMAL, kGreen, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    Text(dc, hwnd, kFooter, layout.byCymrise, 7, FW_NORMAL, RGB(148, 163, 184), DT_CENTER | DT_VCENTER | DT_SINGLELINE, true);
 }
 
 void PaintOverlay(HWND hwnd, HDC dc)
@@ -551,18 +568,18 @@ void PaintAbout(HWND hwnd, HDC dc)
     GetClientRect(hwnd, &client);
     Fill(dc, client, RGB(255, 255, 255));
 
-    const int margin = Dp(hwnd, 20);
-    Text(dc, hwnd, L"ColorPicker", Rect(margin, Dp(hwnd, 18), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 26)), 14, FW_SEMIBOLD, kInk, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    Text(dc, hwnd, L"轻量级 Windows 屏幕取色工具", Rect(margin, Dp(hwnd, 47), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 18)), 8, FW_NORMAL, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    Text(dc, hwnd, L"项目 GitHub", Rect(margin, Dp(hwnd, 76), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 16)), 8, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    Text(dc, hwnd, L"github.com/BearCubConstellation/ColorPicker", GetAboutLinkRect(hwnd), 8, FW_NORMAL, kLink, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, true);
-    Text(dc, hwnd, L"点击链接将在浏览器中打开项目主页", Rect(margin, Dp(hwnd, 137), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 16)), 8, FW_NORMAL, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    const int margin = Dp(hwnd, 18);
+    Text(dc, hwnd, kAppTitle, Rect(margin, Dp(hwnd, 16), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 24)), 13, FW_SEMIBOLD, kInk, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Text(dc, hwnd, kAboutSubtitle, Rect(margin, Dp(hwnd, 42), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 16)), 7, FW_NORMAL, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Text(dc, hwnd, kProjectGithub, Rect(margin, Dp(hwnd, 68), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 14)), 7, FW_BOLD, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    Text(dc, hwnd, L"github.com/BearCubConstellation/ColorPicker", GetAboutLinkRect(hwnd), 7, FW_NORMAL, kLink, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, true);
+    Text(dc, hwnd, kOpenGithubHint, Rect(margin, Dp(hwnd, 126), static_cast<int>(client.right) - margin * 2, Dp(hwnd, 14)), 7, FW_NORMAL, kMuted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 }
 
 void SetMinimumWindowSize(HWND hwnd, MINMAXINFO* info)
 {
     const UINT dpi = GetDpiForWindow(hwnd);
-    RECT bounds{0, 0, Scale(410, dpi), Scale(320, dpi)};
+    RECT bounds{0, 0, Scale(390, dpi), Scale(270, dpi)};
     AdjustWindowRectExForDpi(&bounds, kMainStyle, FALSE, 0, dpi);
     info->ptMinTrackSize.x = bounds.right - bounds.left;
     info->ptMinTrackSize.y = bounds.bottom - bounds.top;
@@ -601,8 +618,8 @@ LRESULT CALLBACK MainProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         const POINT point{GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
         const Layout layout = GetLayout(hwnd);
         if (Hit(layout.pick, point)) StartPicking();
-        else if (Hit(layout.hexCopy, point)) Status(Copy(Hex(gColor)) ? L"HEX 已复制到剪贴板" : L"复制失败，请重试");
-        else if (Hit(layout.rgbCopy, point)) Status(Copy(Rgb(gColor)) ? L"RGB 已复制到剪贴板" : L"复制失败，请重试");
+        else if (Hit(layout.hexCopy, point)) Status(Copy(Hex(gColor)) ? kHexCopied : kCopyFailed);
+        else if (Hit(layout.rgbCopy, point)) Status(Copy(Rgb(gColor)) ? kRgbCopied : kCopyFailed);
         else if (Hit(layout.byCymrise, point)) ShowAbout();
         return 0;
     }
@@ -645,7 +662,7 @@ LRESULT CALLBACK OverlayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
         return 0;
     }
     case WM_TIMER:
-        if (wParam == kPreviewTimer)
+        if (static_cast<UINT_PTR>(wParam) == kPreviewTimer)
         {
             POINT point{};
             GetCursorPos(&point);
@@ -798,10 +815,10 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show)
     if (!RegisterClasses(instance)) return 1;
 
     const UINT dpi = GetDpiForSystem();
-    RECT bounds{0, 0, Scale(410, dpi), Scale(320, dpi)};
+    RECT bounds{0, 0, Scale(390, dpi), Scale(270, dpi)};
     AdjustWindowRectExForDpi(&bounds, kMainStyle, FALSE, 0, dpi);
 
-    gMain = CreateWindowExW(0, kMainClass, kWindowTitle, kMainStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+    gMain = CreateWindowExW(0, kMainClass, kAppTitle, kMainStyle, CW_USEDEFAULT, CW_USEDEFAULT,
         static_cast<int>(bounds.right - bounds.left), static_cast<int>(bounds.bottom - bounds.top),
         nullptr, nullptr, instance, nullptr);
     if (gMain == nullptr) return 1;
