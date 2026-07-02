@@ -4,34 +4,44 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  pull_request:
+    types: [closed]
 
 permissions:
   contents: write
 
 jobs:
   release:
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.merged == false && github.event.pull_request.title == '[release] ColorPicker v1.3.0')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Configure native build
         run: cmake -S native -B build -A x64
-      - name: Build native release
-        run: cmake --build build --config Release --target ColorPicker
+      - name: Build Chinese and English releases
+        run: cmake --build build --config Release --target ColorPicker ColorPickerEn
       - name: Read version
         id: version
         shell: pwsh
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
           "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-      - name: Package executable
+      - name: Package language editions
         shell: pwsh
         run: |
-          Compress-Archive -Path build/Release/ColorPicker.exe -DestinationPath "CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip"
+          Compress-Archive -Path build/Release/ColorPicker.exe -DestinationPath "ColorPicker-v${{ steps.version.outputs.value }}-zh-CN-win-x64.zip"
+          Compress-Archive -Path build/Release/ColorPicker-en.exe -DestinationPath "ColorPicker-v${{ steps.version.outputs.value }}-en-US-win-x64.zip"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.value }}
           name: ColorPicker v${{ steps.version.outputs.value }}
-          body_path: RELEASE_NOTES_v1.2.4.md
-          files: CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip
+          body_path: RELEASE_NOTES_v1.3.0.md
+          files: |
+            ColorPicker-v${{ steps.version.outputs.value }}-zh-CN-win-x64.zip
+            ColorPicker-v${{ steps.version.outputs.value }}-en-US-win-x64.zip
           fail_on_unmatched_files: true
