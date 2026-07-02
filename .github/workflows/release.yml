@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   release:
@@ -47,3 +48,15 @@ jobs:
           body_path: RELEASE_NOTES_v1.2.2.md
           files: CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip
           fail_on_unmatched_files: true
+
+      - name: Report issue-triggered release
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Release v${{ steps.version.outputs.value }} completed: CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip'
+            });
