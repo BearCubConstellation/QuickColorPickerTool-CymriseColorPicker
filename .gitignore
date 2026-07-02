@@ -1,22 +1,20 @@
-# 编译输出
-bin/
-obj/
+# Native build output
+build/
+out/
+*.pdb
+*.ilk
+*.obj
+*.exe
 
-# IDE配置
+# IDE settings
 .vscode/
+.vs/
 *.user
 *.suo
-*.vs/
 
-# 依赖项
-packages/
-node_modules/
-
-# 发布输出
+# Package output
 publish/
-Release/
-Debug/
 
-# 系统文件
+# System files
 Thumbs.db
 .DS_Store
