@@ -1,159 +1,169 @@
-// Copyright (c) 2025 Cymrise
+// Copyright (c) 2025-2026 Cymrise
 // Licensed under the MIT License.
 
 using System;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace CymriseColorPicker
 {
     public class OverlayForm : Form
     {
-        // 在覆盖层中声明所需的API
-        [DllImport("user32.dll")]
-        private static extern bool SetCursorPos(int x, int y);
-
-        [DllImport("user32.dll")]
-        private static extern bool ClipCursor(ref Rectangle lpRect);
-
         private readonly Bitmap screenSnapshot;
-        private Point lastMousePos;
+        private readonly Rectangle virtualScreenBounds;
+        private Point lastScreenPoint;
+        private PickerLensForm lensForm;
 
         public event EventHandler<ColorEventArgs> ColorPicked;
         public event EventHandler<ColorPreviewEventArgs> ColorPreview;
         public event EventHandler PickingCancelled;
 
-        public OverlayForm(Bitmap snapshot)
+        public OverlayForm(Bitmap snapshot, Rectangle snapshotBounds)
         {
-            screenSnapshot = snapshot;
+            screenSnapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
+            virtualScreenBounds = snapshotBounds;
             InitializeForm();
         }
 
         private void InitializeForm()
         {
-            // 无边框全屏窗口?
+            AutoScaleMode = AutoScaleMode.None;
             FormBorderStyle = FormBorderStyle.None;
-            WindowState = FormWindowState.Maximized;
+            StartPosition = FormStartPosition.Manual;
+            Bounds = virtualScreenBounds;
             TopMost = true;
             ShowInTaskbar = false;
             DoubleBuffered = true;
+            KeyPreview = true;
 
-            // 透明背景设置
-            BackColor = Color.Magenta;
-            TransparencyKey = Color.Magenta;
-            Opacity = 0.01; // 几乎透明但仍能捕获?
-
-            // 设置十字光标
+            // This nearly transparent input surface leaves the desktop visible while the
+            // immutable snapshot provides stable pixel sampling.
+            BackColor = Color.Black;
+            Opacity = 0.01d;
             Cursor = Cursors.Cross;
 
-            // 事件处理
             MouseMove += OverlayForm_MouseMove;
-            MouseClick += OverlayForm_MouseClick;
-            KeyDown += OverlayForm_KeyDown;
-            Paint += OverlayForm_Paint;
-        }
-
-        private void OverlayForm_Paint(object sender, PaintEventArgs e)
-        {
-            // 绘制屏幕快照
-            e.Graphics.DrawImage(screenSnapshot, Point.Empty);
-        }
-
-        private void OverlayForm_MouseMove(object sender, MouseEventArgs e)
-        {
-            // 限制光标在屏幕范围内
-            if (!ScreenBounds.Contains(e.Location))
-            {
-                Point newPos = e.Location;
-                if (newPos.X < ScreenBounds.Left) newPos.X = ScreenBounds.Left;
-                if (newPos.Y < ScreenBounds.Top) newPos.Y = ScreenBounds.Top;
-                if (newPos.X > ScreenBounds.Right) newPos.X = ScreenBounds.Right;
-                if (newPos.Y > ScreenBounds.Bottom) newPos.Y = ScreenBounds.Bottom;
-                
-                SetCursorPos(newPos.X, newPos.Y);
-            }
-            
-            lastMousePos = e.Location;
-            this.Text = $"X: {e.X} Y: {e.Y}";
-            
-            // 获取当前颜色并触发预览
-            Color currentColor = GetColorFromSnapshot(e.Location);
-            ColorPreview?.Invoke(this, new ColorPreviewEventArgs(currentColor));
-        }
-
-        private Rectangle ScreenBounds
-        {
-            get
-            {
-                Rectangle bounds = Rectangle.Empty;
-                foreach (Screen screen in Screen.AllScreens)
-                {
-                    bounds = Rectangle.Union(bounds, screen.Bounds);
-                }
-                return bounds;
-            }
-        }
-
-        private void OverlayForm_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                // 从快照获取颜色
-                Color color = GetColorFromSnapshot(e.Location);
-                ColorPicked?.Invoke(this, new ColorEventArgs(color));
-                this.Close();
-            }
-            else if (e.Button == MouseButtons.Right)
-            {
-                PickingCancelled?.Invoke(this, EventArgs.Empty);
-                this.Close();
-            }
-        }
-
-        private Color GetColorFromSnapshot(Point location)
-        {
-            // 确保位置在快照范围内
-            location.X = Math.Max(0, Math.Min(location.X, screenSnapshot.Width - 1));
-            location.Y = Math.Max(0, Math.Min(location.Y, screenSnapshot.Height - 1));
-            
-            return screenSnapshot.GetPixel(location.X, location.Y);
-        }
-
-        private void OverlayForm_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Escape)
-            {
-                PickingCancelled?.Invoke(this, EventArgs.Empty);
-                this.Close();
-            }
-            else if (e.KeyCode == Keys.Space || e.KeyCode == Keys.Enter)
-            {
-                // 空格键或回车键也可取色
-                Color color = GetColorFromSnapshot(lastMousePos);
-                ColorPicked?.Invoke(this, new ColorEventArgs(color));
-                this.Close();
-            }
+            MouseDown += OverlayForm_MouseDown;
         }
 
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
-            
-            // 将光标限制在屏幕范围
-            Rectangle bounds = ScreenBounds;
-            ClipCursor(ref bounds);
+
+            lastScreenPoint = ClampToVirtualScreen(Cursor.Position);
+            lensForm = new PickerLensForm();
+            lensForm.Show();
+            PreviewAt(lastScreenPoint);
+
+            BeginInvoke(new MethodInvoker(() =>
+            {
+                if (!IsDisposed)
+                {
+                    Activate();
+                    Focus();
+                }
+            }));
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            base.OnClosed(e);
-            // 释放光标限制
-            ClipCursor(IntPtr.Zero);
+            Keys keyCode = keyData & Keys.KeyCode;
+
+            if (keyCode == Keys.Escape)
+            {
+                CancelPicking();
+                return true;
+            }
+
+            if (keyCode == Keys.Space || keyCode == Keys.Enter)
+            {
+                FinishPicking(lastScreenPoint);
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        // 声明缺失的API
-        [DllImport("user32.dll")]
-        private static extern bool ClipCursor(IntPtr lpRect);
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            if (lensForm != null)
+            {
+                lensForm.Close();
+                lensForm.Dispose();
+                lensForm = null;
+            }
+
+            base.OnFormClosed(e);
+        }
+
+        private void OverlayForm_MouseMove(object sender, MouseEventArgs e)
+        {
+            PreviewAt(PointToScreen(e.Location));
+        }
+
+        private void OverlayForm_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                FinishPicking(PointToScreen(e.Location));
+            }
+            else if (e.Button == MouseButtons.Right)
+            {
+                CancelPicking();
+            }
+        }
+
+        private void PreviewAt(Point screenPoint)
+        {
+            lastScreenPoint = ClampToVirtualScreen(screenPoint);
+            Color currentColor = GetColorFromSnapshot(lastScreenPoint);
+
+            lensForm?.UpdatePreview(currentColor, lastScreenPoint, virtualScreenBounds);
+            ColorPreview?.Invoke(this, new ColorPreviewEventArgs(currentColor));
+        }
+
+        private void FinishPicking(Point screenPoint)
+        {
+            Color color = GetColorFromSnapshot(ClampToVirtualScreen(screenPoint));
+
+            try
+            {
+                ColorPicked?.Invoke(this, new ColorEventArgs(color));
+            }
+            finally
+            {
+                Close();
+            }
+        }
+
+        private void CancelPicking()
+        {
+            try
+            {
+                PickingCancelled?.Invoke(this, EventArgs.Empty);
+            }
+            finally
+            {
+                Close();
+            }
+        }
+
+        private Point ClampToVirtualScreen(Point screenPoint)
+        {
+            int x = Math.Min(Math.Max(screenPoint.X, virtualScreenBounds.Left), virtualScreenBounds.Right - 1);
+            int y = Math.Min(Math.Max(screenPoint.Y, virtualScreenBounds.Top), virtualScreenBounds.Bottom - 1);
+            return new Point(x, y);
+        }
+
+        private Color GetColorFromSnapshot(Point screenPoint)
+        {
+            int snapshotX = screenPoint.X - virtualScreenBounds.Left;
+            int snapshotY = screenPoint.Y - virtualScreenBounds.Top;
+
+            snapshotX = Math.Min(Math.Max(snapshotX, 0), screenSnapshot.Width - 1);
+            snapshotY = Math.Min(Math.Max(snapshotY, 0), screenSnapshot.Height - 1);
+
+            return screenSnapshot.GetPixel(snapshotX, snapshotY);
+        }
     }
 }
