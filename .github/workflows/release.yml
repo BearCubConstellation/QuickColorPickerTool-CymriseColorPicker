@@ -10,16 +10,13 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-
       - name: Read version
         id: version
         shell: pwsh
@@ -27,17 +24,15 @@ jobs:
           [xml]$project = Get-Content CymriseColorPicker.csproj
           $version = $project.Project.PropertyGroup.Version
           "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-
       - name: Publish win-x64
         shell: pwsh
         run: |
-          dotnet publish CymriseColorPicker.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/win-x64
-          Compress-Archive -Path publish/win-x64/* -DestinationPath "CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip"
-
+          dotnet publish CymriseColorPicker.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o publish/win-x64
+          Compress-Archive -Path publish/win-x64/* -DestinationPath "CymriseColorPicker-v${{ steps.version.outputs.value }}-portable-win-x64.zip"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.value }}
           name: Cymrise Color Picker v${{ steps.version.outputs.value }}
-          body_path: RELEASE_NOTES_v1.1.0.md
-          files: CymriseColorPicker-v${{ steps.version.outputs.value }}-win-x64.zip
+          body_path: RELEASE_NOTES_v1.1.1.md
+          files: CymriseColorPicker-v${{ steps.version.outputs.value }}-portable-win-x64.zip
