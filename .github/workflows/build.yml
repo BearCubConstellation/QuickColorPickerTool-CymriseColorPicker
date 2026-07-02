@@ -28,16 +28,18 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore
 
-      - name: Publish win-x64
+      - name: Publish portable win-x64
         run: >
-          dotnet publish -c Release -r win-x64 --self-contained false
+          dotnet publish -c Release -r win-x64 --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=None
+          -p:DebugSymbols=false
           -o ./publish/win-x64
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: CymriseColorPicker-win-x64
+          name: CymriseColorPicker-portable-win-x64
           path: publish/win-x64
           if-no-files-found: error
