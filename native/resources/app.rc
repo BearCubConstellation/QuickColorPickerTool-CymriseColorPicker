@@ -1,6 +1,6 @@
 #include <windows.h>
 
-#define IDI_APP 101
+#define IDI_APP 1
 IDI_APP ICON "../../CymriseColorPicker.ico"
 
 VS_VERSION_INFO VERSIONINFO
