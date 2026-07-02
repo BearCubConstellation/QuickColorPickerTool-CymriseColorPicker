@@ -28,18 +28,16 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore
 
-      - name: Publish portable win-x64
-        run: >
-          dotnet publish -c Release -r win-x64 --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:DebugType=None
-          -p:DebugSymbols=false
-          -o ./publish/win-x64
+      - name: Package lightweight exe
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path publish/win-x64 | Out-Null
+          Copy-Item bin/Release/net48/ColorPicker.exe publish/win-x64/ColorPicker.exe
+          if (Test-Path bin/Release/net48/ColorPicker.exe.config) { Copy-Item bin/Release/net48/ColorPicker.exe.config publish/win-x64/ }
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: CymriseColorPicker-portable-win-x64
+          name: CymriseColorPicker-lightweight-win-x64
           path: publish/win-x64
           if-no-files-found: error
