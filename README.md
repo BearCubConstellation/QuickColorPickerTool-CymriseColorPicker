@@ -2,11 +2,12 @@
 
 轻量、简洁的 Windows 屏幕取色工具。用于快速读取屏幕任意像素的 HEX 与 RGB 值，并支持一键复制。
 
-> 当前版本：**v1.1.1**
+> 当前版本：**v1.1.2**
 
 ## 特性
 
-- **完整免环境运行**：正式发布包内置 .NET Desktop Runtime，Windows 10 / 11 x64 解压后可直接运行。
+- **轻量发布包**：不再打包完整 .NET 8 Desktop Runtime，避免 60MB+ 大包。
+- **Windows 原生组件运行**：基于 .NET Framework 4.8，Windows 10 / 11 通常已内置，无需用户额外下载 .NET 8 Runtime。
 - **DPI 感知取色**：针对 Windows 125%、150%、175% 等显示缩放进行坐标修正。
 - **多显示器支持**：支持扩展屏、负坐标布局与跨屏取色。
 - **实时悬浮预览**：取色时显示当前 HEX 值与颜色块，不遮挡主界面。
@@ -15,13 +16,14 @@
 
 ## 使用方式
 
-1. 下载名称带有 `portable-win-x64` 的 Release 压缩包。
+1. 下载名称带有 `lightweight-win-x64` 的 Release 压缩包。
 2. 解压后直接运行 `ColorPicker.exe`。
-3. 不需要安装 .NET Runtime，不需要额外配置。
+3. 该版本不会弹出 .NET 8 Desktop Runtime 安装提示。
 
 ## 系统要求
 
 - Windows 10 / 11 x64
+- .NET Framework 4.8（Windows 10 新版本与 Windows 11 通常已内置）
 - 推荐测试显示缩放：100%、125%、150%、175%、200%
 
 ## 本地构建
@@ -33,24 +35,22 @@ dotnet build -c Release
 
 ## 本地发布
 
-生成正式完整免环境包：
+生成轻量发布包：
 
 ```powershell
-dotnet publish -c Release -r win-x64 --self-contained true `
-  -p:PublishSingleFile=true `
-  -p:IncludeNativeLibrariesForSelfExtract=true `
-  -p:DebugType=None `
-  -p:DebugSymbols=false `
-  -o .\publish\win-x64
+dotnet build -c Release
+mkdir .\publish\win-x64
+copy .\bin\Release\net48\ColorPicker.exe .\publish\win-x64\ColorPicker.exe
 ```
 
-发布包体积会比框架依赖版更大，但用户无需安装 .NET；正式压缩包也不会包含 `ColorPicker.pdb`。
+正式压缩包不包含完整 .NET 运行时，也不会包含 `ColorPicker.pdb`。
 
-## v1.1.1
+## v1.1.2
 
-- 正式发布切换为 x64 完整免环境包。
-- 发布与构建工作流统一改为 `--self-contained true`。
-- 关闭 PDB 调试符号输出，避免其进入用户下载包。
+- 回退 v1.1.1 的完整运行时打包策略。
+- 目标框架切换为 .NET Framework 4.8。
+- 发布包改回轻量级，仅包含应用本体与必要配置文件。
+- 保留 v1.1.0 的 DPI、多屏、坐标取色与界面优化。
 
 ## v1.1.0 重点修复
 
