@@ -2,11 +2,11 @@
 
 轻量级 Windows 屏幕取色器，使用原生 Win32 C++ 实现。
 
-> 当前版本：**v1.2.0 Native**
+> 当前版本：**v1.2.1 Native**
 
 ## 下载与运行
 
-下载 Release 中的 `CymriseColorPicker-v1.2.0-win-x64.zip`，解压后直接运行：
+下载 Release 中的 `CymriseColorPicker-v1.2.1-win-x64.zip`，解压后直接运行：
 
 ```text
 ColorPicker.exe
@@ -44,11 +44,12 @@ cmake --build build --config Release
 build\Release\ColorPicker.exe
 ```
 
-## v1.2.0
+## v1.2.1
 
-- 从 WinForms / .NET 发布链迁移为原生 Win32 C++。
-- 发布包改为单个原生 `ColorPicker.exe`。
-- 保留并重做高 DPI、多显示器、虚拟桌面坐标与现代化界面能力。
+- 原生 Win32 C++ 发布版。
+- 发布包只有 `ColorPicker.exe`，不包含 .NET Runtime、PDB 或配置文件。
+- 使用静态 C/C++ 运行库，不要求用户准备额外环境。
+- 保留高 DPI、多显示器、虚拟桌面坐标与现代化界面能力。
 
 ## 开源协议
 
