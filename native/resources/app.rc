@@ -4,8 +4,8 @@
 IDI_APP ICON "../../CymriseColorPicker.ico"
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,2,0
- PRODUCTVERSION 1,2,2,0
+ FILEVERSION 1,2,3,0
+ PRODUCTVERSION 1,2,3,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -21,12 +21,12 @@ BEGIN
     BLOCK "080404B0"
     BEGIN
       VALUE "CompanyName", "Cymrise"
-      VALUE "FileDescription", "Cymrise Color Picker"
-      VALUE "FileVersion", "1.2.2"
+      VALUE "FileDescription", "ColorPicker"
+      VALUE "FileVersion", "1.2.3"
       VALUE "InternalName", "ColorPicker"
       VALUE "OriginalFilename", "ColorPicker.exe"
-      VALUE "ProductName", "Cymrise Color Picker"
-      VALUE "ProductVersion", "1.2.2"
+      VALUE "ProductName", "ColorPicker"
+      VALUE "ProductVersion", "1.2.3"
     END
   END
   BLOCK "VarFileInfo"
