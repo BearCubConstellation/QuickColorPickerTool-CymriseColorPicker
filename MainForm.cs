@@ -1,55 +1,28 @@
-// Copyright (c) 2025 Cymrise
+// Copyright (c) 2025-2026 Cymrise
 // Licensed under the MIT License.
 
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace CymriseColorPicker
 {
     public partial class MainForm : Form
     {
-        // API声明
-        [DllImport("user32.dll")]
-        private static extern bool SetCursorPos(int x, int y);
-
-        [DllImport("user32.dll")]
-        private static extern bool ClipCursor(ref Rectangle lpRect);
-
-        [DllImport("user32.dll")]
-        private static extern bool ClipCursor(IntPtr lpRect);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetCursorPos(out Point lpPoint);
-
-        [DllImport("user32.dll")]
-        private static extern bool ReleaseCapture();
-
-        [DllImport("user32.dll")]
-        private static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-
-        private const int IDC_CROSS = 32515;
-        private const int WM_NCLBUTTONDOWN = 0xA1;
-        private const int HT_CAPTION = 0x2;
-
-        private bool isPicking = false;
+        private bool isPicking;
         private Bitmap screenSnapshot;
         private OverlayForm overlayForm;
-
-        private IntPtr crossCursor; // 声明十字光标句柄
+        private Rectangle virtualScreenBounds;
 
         public MainForm()
         {
             InitializeComponent();
-            InitializeCursor();
-            this.DoubleBuffered = true;
-        }
-
-        private void InitializeCursor()
-        {
-            crossCursor = LoadCursor(IntPtr.Zero, IDC_CROSS);
+            DoubleBuffered = true;
+            UpdateSelectedColor(Color.FromArgb(59, 130, 246));
+            lblStatus.Text = "就绪，可开始取色";
         }
 
         private void btnPick_Click(object sender, EventArgs e)
@@ -57,129 +30,180 @@ namespace CymriseColorPicker
             StartColorPicking();
         }
 
+        private void btnCopyHex_Click(object sender, EventArgs e)
+        {
+            CopyToClipboard(txtHex.Text, "HEX");
+        }
+
+        private void btnCopyRgb_Click(object sender, EventArgs e)
+        {
+            CopyToClipboard(txtRgb.Text, "RGB");
+        }
+
         private void StartColorPicking()
         {
-            if (isPicking) return;
-            isPicking = true;
+            if (isPicking)
+            {
+                return;
+            }
 
-            // 隐藏主窗
-            // this.Hide();
+            try
+            {
+                // Hide before the snapshot is captured so the application itself cannot be sampled.
+                Hide();
+                Application.DoEvents();
 
-            // 初始化颜色预览
-            lblColor.BackColor = Color.Transparent;
-            txtHex.Text = "";
-            txtRgb.Text = "";
-            lblStatus.Text = "移动鼠标选择颜色";
+                CaptureScreenSnapshot();
+                overlayForm = new OverlayForm(screenSnapshot, virtualScreenBounds);
+                overlayForm.ColorPicked += OverlayForm_ColorPicked;
+                overlayForm.ColorPreview += OverlayForm_ColorPreview;
+                overlayForm.PickingCancelled += OverlayForm_PickingCancelled;
+                overlayForm.FormClosed += OverlayForm_FormClosed;
 
-            // 创建屏幕快照
-            CaptureScreenSnapshot();
-
-            // 创建并显示覆盖层
-            overlayForm = new OverlayForm(screenSnapshot);
-            overlayForm.ColorPicked += OverlayForm_ColorPicked;
-            overlayForm.PickingCancelled += OverlayForm_PickingCancelled;
-            // 颜色预览事件处理
-            overlayForm.ColorPreview += OverlayForm_ColorPreview;
-            overlayForm.Show();
+                isPicking = true;
+                overlayForm.Show();
+            }
+            catch
+            {
+                StopColorPicking(closeOverlay: true);
+                ShowMainWindow();
+                lblStatus.Text = "无法启动取色，请重试";
+            }
         }
 
         private void CaptureScreenSnapshot()
         {
-            Rectangle totalBounds = Rectangle.Empty;
-            foreach (Screen screen in Screen.AllScreens)
+            screenSnapshot?.Dispose();
+            virtualScreenBounds = SystemInformation.VirtualScreen;
+
+            if (virtualScreenBounds.Width <= 0 || virtualScreenBounds.Height <= 0)
             {
-                totalBounds = Rectangle.Union(totalBounds, screen.Bounds);
+                throw new InvalidOperationException("无法获取虚拟桌面范围。");
             }
 
-            screenSnapshot = new Bitmap(totalBounds.Width, totalBounds.Height, PixelFormat.Format32bppArgb);
+            screenSnapshot = new Bitmap(
+                virtualScreenBounds.Width,
+                virtualScreenBounds.Height,
+                PixelFormat.Format32bppArgb);
 
-            using (Graphics g = Graphics.FromImage(screenSnapshot))
-            {
-                g.CopyFromScreen(totalBounds.Location, Point.Empty, totalBounds.Size);
-            }
+            using Graphics graphics = Graphics.FromImage(screenSnapshot);
+            graphics.CopyFromScreen(
+                virtualScreenBounds.Location,
+                Point.Empty,
+                virtualScreenBounds.Size,
+                CopyPixelOperation.SourceCopy);
         }
 
-        // 预览事件处理方法
         private void OverlayForm_ColorPreview(object sender, ColorPreviewEventArgs e)
         {
-            // 实时更新颜色预览
-            lblColor.BackColor = e.PreviewColor;
-            txtHex.Text = ColorToHex(e.PreviewColor);
-            txtRgb.Text = $"{e.PreviewColor.R}, {e.PreviewColor.G}, {e.PreviewColor.B}";
+            UpdateSelectedColor(e.PreviewColor);
         }
 
         private void OverlayForm_ColorPicked(object sender, ColorEventArgs e)
         {
-            EndColorPicking();
+            StopColorPicking(closeOverlay: false);
+            ShowMainWindow();
+            UpdateSelectedColor(e.SelectedColor);
 
-            // 显示主窗体并更新颜色
-            this.Show();
-            this.TopMost = true;
-            this.TopMost = false;
-
-            // 在这里处理获取到的颜色?
-            lblColor.BackColor = e.SelectedColor;
-            txtHex.Text = ColorToHex(e.SelectedColor);
-            // RGB值?
-            txtRgb.Text = $"{e.SelectedColor.R}, {e.SelectedColor.G}, {e.SelectedColor.B}";
-
-            Clipboard.SetText(txtHex.Text);
-            lblStatus.Text = $"颜色已复制到剪贴板 {txtHex.Text}";
+            lblStatus.Text = TryCopyText(txtHex.Text)
+                ? $"已复制 HEX：{txtHex.Text}"
+                : $"已取色：{txtHex.Text}（复制失败，可点击复制）";
         }
 
         private void OverlayForm_PickingCancelled(object sender, EventArgs e)
         {
-            EndColorPicking();
-            // this.Show();
-            lblStatus.Text = "已吸取颜色";
+            StopColorPicking(closeOverlay: false);
+            ShowMainWindow();
+            lblStatus.Text = "已取消取色";
         }
 
-        private void EndColorPicking()
+        private void OverlayForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (!isPicking) return;
-
-            isPicking = false;
-
-            // 取消预览事件订阅
-            if (overlayForm != null)
+            if (!isPicking)
             {
-                overlayForm.ColorPreview -= OverlayForm_ColorPreview;
+                return;
             }
 
-            // 清理资源
-            overlayForm?.Dispose();
+            StopColorPicking(closeOverlay: false);
+            ShowMainWindow();
+            lblStatus.Text = "取色已结束";
+        }
+
+        private void StopColorPicking(bool closeOverlay)
+        {
+            OverlayForm overlay = overlayForm;
             overlayForm = null;
+            isPicking = false;
+
+            if (overlay != null)
+            {
+                overlay.ColorPicked -= OverlayForm_ColorPicked;
+                overlay.ColorPreview -= OverlayForm_ColorPreview;
+                overlay.PickingCancelled -= OverlayForm_PickingCancelled;
+                overlay.FormClosed -= OverlayForm_FormClosed;
+
+                if (closeOverlay && !overlay.IsDisposed)
+                {
+                    overlay.Close();
+                }
+            }
 
             screenSnapshot?.Dispose();
             screenSnapshot = null;
-
-            // 释放光标限制
-            ClipCursor(IntPtr.Zero);
         }
 
-        private string ColorToHex(Color color)
+        private void ShowMainWindow()
+        {
+            Show();
+            Activate();
+        }
+
+        private void UpdateSelectedColor(Color color)
+        {
+            pnlColorPreview.BackColor = color;
+            txtHex.Text = ColorToHex(color);
+            txtRgb.Text = $"RGB({color.R}, {color.G}, {color.B})";
+        }
+
+        private void CopyToClipboard(string value, string formatName)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                lblStatus.Text = "暂无可复制的颜色值";
+                return;
+            }
+
+            lblStatus.Text = TryCopyText(value)
+                ? $"{formatName} 已复制到剪贴板"
+                : "复制失败，请重试";
+        }
+
+        private static bool TryCopyText(string value)
+        {
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                try
+                {
+                    Clipboard.SetText(value);
+                    return true;
+                }
+                catch (ExternalException)
+                {
+                    Thread.Sleep(30);
+                }
+            }
+
+            return false;
+        }
+
+        private static string ColorToHex(Color color)
         {
             return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
         }
 
-        // 允许拖动窗体
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            base.OnMouseDown(e);
-            if (e.Button == MouseButtons.Left)
-            {
-                ReleaseCapture();
-                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
-            }
-        }
-
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            EndColorPicking();
+            StopColorPicking(closeOverlay: true);
         }
-
-        // 声明缺失的API
-        [DllImport("user32.dll")]
-        private static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
     }
 }
