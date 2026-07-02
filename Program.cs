@@ -11,8 +11,6 @@ namespace CymriseColorPicker
         [STAThread]
         private static void Main()
         {
-            // Must run before any window or control is created.
-            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
