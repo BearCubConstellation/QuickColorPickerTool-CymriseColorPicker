@@ -13,6 +13,12 @@ The latest release contains two standalone Windows x64 packages:
 
 Extract the package and run the included `.exe`. No .NET, Java, VC++ Runtime, installer, external DLL, PDB, or configuration file is required.
 
+## Screenshot / 效果图
+
+<p align="center">
+  <img src="images/sshot-048.png" alt="ColorPicker screenshot" width="707">
+</p>
+
 ## Features
 
 - Native Win32 C++ and static C++ runtime.
