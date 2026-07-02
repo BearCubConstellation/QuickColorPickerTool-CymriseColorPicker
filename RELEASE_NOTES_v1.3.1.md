@@ -3,7 +3,7 @@
 ## English
 
 - Reduced the spacing between the three bottom information rows so they read as one compact status group.
-- Increased the visual hierarchy of actionable information: HEX, RGB, copy buttons, and the primary picker button are larger and easier to read.
+- Increased the visual hierarchy of actionable information: HEX, RGB, Copy buttons, and the primary picker button are larger and easier to read.
 - Unified both Copy buttons with the same blue-tinted background, blue text, dimensions, and typography.
 - Refined the colored title shadow so medium-bright colors remain crisp on the dark header.
 
